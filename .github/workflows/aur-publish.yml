@@ -41,13 +41,14 @@ jobs:
             git push origin "$V"
           fi
 
-      - name: Generate .SRCINFO (in Arch container)
+      - name: Generate .SRCINFO (non-root inside Arch container)
         run: |
           docker run --rm -v "$PWD":/pkg -w /pkg archlinux:base bash -lc '
             set -euo pipefail
-            # makepkg is part of pacman; ensure base tools and keys are ready
-            pacman -Sy --noconfirm --needed git base-devel >/dev/null
-            makepkg --printsrcinfo > .SRCINFO
+            pacman -Sy --noconfirm --needed base-devel >/dev/null
+            useradd -m build
+            chown -R build:build /pkg
+            su build -c "makepkg --printsrcinfo > .SRCINFO"
           '
         # If you prefer not to update inside the container, drop the pacman -Sy line
         # and rely on the base image's pacman/makepkg availability.
