@@ -20,3 +20,25 @@ This is achieved through some clever tricks (like using zero-width characters in
 - Written in **Go** - fast and lightweight.
 
 ---
+
+## Usage
+
+Just bind your workspace keys to the installed binary:
+
+```conf
+# Cycle existing workspaces on focused monitor
+bind = $mainMod, Tab, exec, hypr-local-workspaces cycle up
+bind = $mainMod SHIFT, Tab, exec, hypr-local-workspaces cycle down
+
+# Switch workspaces relative to active monitor
+bind = $mainMod, 1, exec, hypr-local-workspaces goto 1
+...
+
+# Move active window to a workspace relative to active monitor
+bind = $mainMod SHIFT, 1, exec, hypr-local-workspaces move 1
+...
+
+# Move all windows of active workspace to a workspace relative to active monitor
+bind = $mainMod CTRL, 1, exec, hypr-local-workspaces move --all 1
+...
+```
