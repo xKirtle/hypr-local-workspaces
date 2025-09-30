@@ -8,8 +8,9 @@ url="https://github.com/xKirtle/hypr-local-workspaces"
 license=('MIT')
 depends=('glibc')
 makedepends=('go')
+options=('!debug' '!strip')
 source=("$url/archive/refs/tags/v$pkgver.tar.gz")
-sha256sums=('TBD')
+sha256sums=('a193eb69633bccb75d93a1a28106c3eda8782fc1fcd16ecdcc03cabecd966fbf')
 
 build() {
   cd "$srcdir/hypr-local-workspaces-$pkgver"
