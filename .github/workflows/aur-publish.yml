@@ -41,6 +41,16 @@ jobs:
             git push origin "$V"
           fi
 
+      - name: Update checksums in PKGBUILD
+        run: |
+          docker run --rm -v "$PWD":/pkg -w /pkg archlinux:base bash -lc '
+            set -euo pipefail
+            pacman -Sy --noconfirm --needed base-devel >/dev/null
+            useradd -m build
+            chown -R build:build /pkg
+            su build -c "updpkgsums"
+          '
+
       - name: Generate .SRCINFO (non-root inside Arch container)
         run: |
           docker run --rm -v "$PWD":/pkg -w /pkg archlinux:base bash -lc '
