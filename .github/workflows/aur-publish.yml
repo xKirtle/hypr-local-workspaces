@@ -45,7 +45,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD":/pkg -w /pkg archlinux:base bash -lc '
             set -euo pipefail
-            pacman -Sy --noconfirm --needed base-devel >/dev/null
+            pacman -Sy --noconfirm --needed pacman-contrib git curl >/dev/null
             useradd -m build
             chown -R build:build /pkg
             su build -c "updpkgsums"
