@@ -71,20 +71,30 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ secrets.AUR_GIT_EMAIL    || 'github-actions[bot]@users.noreply.github.com' }}
         run: |
           set -euo pipefail
-          AUR_URL="aur@aur.archlinux.org:${{ steps.meta.outputs.pkgname }}.git"
+          AUR_URL="aur@aur.archlinux.org:hypr-local-workspaces.git"
           TMPDIR="$(mktemp -d)"
           git clone "$AUR_URL" "$TMPDIR/aur"
-
-          # Copy files required by AUR (add others if you reference them in source=())
+          
+          # Sync files required by AUR
           cp -f PKGBUILD .SRCINFO "$TMPDIR/aur/"
-
+          
           cd "$TMPDIR/aur"
-          if git diff --quiet && git diff --cached --quiet; then
+          
+          # Ensure we have a branch (empty AUR repos have no HEAD yet)
+          if ! git symbolic-ref -q HEAD >/dev/null; then
+            git checkout -b master
+          fi
+          
+          git config user.name  "${GIT_AUTHOR_NAME}"
+          git config user.email "${GIT_AUTHOR_EMAIL}"
+          
+          # Stage, then check if there is anything to commit
+          git add -A
+          if git diff --cached --quiet; then
             echo "No changes to push to AUR."
             exit 0
           fi
-
-          git add PKGBUILD .SRCINFO
-          git commit -m "AUR: ${{ steps.meta.outputs.pkgname }} v${{ steps.meta.outputs.pkgver }}"
-          git push
-
+          
+          git commit -m "AUR: hypr-local-workspaces v${{ steps.meta.outputs.pkgver }}"
+          # Push explicitly to master to cover first-push case
+          git push origin HEAD:master
