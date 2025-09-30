@@ -1,47 +1,49 @@
-name: Publish to AUR
+name: Publish to AUR (on tag)
 
 on:
   push:
-    branches: [ main ]
-    paths:
-      - 'PKGBUILD'        # run only when PKGBUILD changes
-  workflow_dispatch:      # allow manual runs
+    tags:
+      - 'v*'     # e.g. v0.1.0
 
 permissions:
-  contents: write         # needed to create/push tags
+  contents: read
 
 jobs:
   aur:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # we need tags
+          fetch-depth: 0
 
-      - name: Extract pkgname and pkgver
-        id: meta
+      - name: Derive version from tag
+        id: ver
         run: |
-          PKGVER="$(grep -E '^[[:space:]]*pkgver=' PKGBUILD | head -n1 | cut -d= -f2)"
-          PKGNAME="$(grep -E '^[[:space:]]*pkgname=' PKGBUILD | head -n1 | cut -d= -f2)"
-          if [ -z "$PKGVER" ] || [ -z "$PKGNAME" ]; then
-            echo "Failed to parse pkgver/pkgname from PKGBUILD"; exit 1
+          RAW="${GITHUB_REF_NAME}" # e.g. v0.1.0
+          # strip leading v or V
+          PKGVER="${RAW#[vV]}"
+          # simple sanity check (digits and dots)
+          if ! [[ "$PKGVER" =~ ^[0-9]+(\.[0-9]+)*$ ]]; then
+            echo "Tag must be like v1.2.3 (got: $RAW)"; exit 1
           fi
-          echo "pkgver=$PKGVER"   >> "$GITHUB_OUTPUT"
-          echo "pkgname=$PKGNAME" >> "$GITHUB_OUTPUT"
+          echo "pkgver=$PKGVER" >> "$GITHUB_OUTPUT"
 
-      - name: Create tag v${{ steps.meta.outputs.pkgver }} if missing
+      - name: Update pkgver/pkgrel in PKGBUILD
         run: |
-          V="v${{ steps.meta.outputs.pkgver }}"
-          if git rev-parse -q --verify "refs/tags/$V" >/dev/null; then
-            echo "Tag $V already exists."
+          set -euo pipefail
+          PKGVER="${{ steps.ver.outputs.pkgver }}"
+          # overwrite pkgver=... line
+          sed -E -i "s/^(pkgver=).*/\1${PKGVER}/" PKGBUILD
+          # reset pkgrel to 1 (optional but recommended for new upstream)
+          if grep -qE '^[[:space:]]*pkgrel=' PKGBUILD; then
+            sed -E -i 's/^(pkgrel=).*/\11/' PKGBUILD
           else
-            git tag -a "$V" -m "Release $V from PKGBUILD"
-            git push origin "$V"
+            echo "pkgrel=1" >> PKGBUILD
           fi
 
-      - name: Update checksums in PKGBUILD
+      - name: Update checksums (updpkgsums)
         run: |
           docker run --rm -v "$PWD":/pkg -w /pkg archlinux:base bash -lc '
             set -euo pipefail
@@ -51,7 +53,7 @@ jobs:
             su build -c "updpkgsums"
           '
 
-      - name: Generate .SRCINFO (non-root inside Arch container)
+      - name: Generate .SRCINFO
         run: |
           docker run --rm -v "$PWD":/pkg -w /pkg archlinux:base bash -lc '
             set -euo pipefail
@@ -60,8 +62,13 @@ jobs:
             chown -R build:build /pkg
             su build -c "makepkg --printsrcinfo > .SRCINFO"
           '
-        # If you prefer not to update inside the container, drop the pacman -Sy line
-        # and rely on the base image's pacman/makepkg availability.
+
+      - name: Extract pkgname
+        id: meta
+        run: |
+          PKGNAME="$(grep -E '^[[:space:]]*pkgname=' PKGBUILD | head -n1 | cut -d= -f2)"
+          test -n "$PKGNAME" || { echo "pkgname not found"; exit 1; }
+          echo "pkgname=$PKGNAME" >> "$GITHUB_OUTPUT"
 
       - name: Set up SSH for AUR
         uses: webfactory/ssh-agent@v0.9.0
@@ -81,30 +88,26 @@ jobs:
           GIT_COMMITTER_EMAIL: ${{ secrets.AUR_GIT_EMAIL    || 'github-actions[bot]@users.noreply.github.com' }}
         run: |
           set -euo pipefail
-          AUR_URL="aur@aur.archlinux.org:hypr-local-workspaces.git"
+          AUR_URL="aur@aur.archlinux.org:${{ steps.meta.outputs.pkgname }}.git"
           TMPDIR="$(mktemp -d)"
           git clone "$AUR_URL" "$TMPDIR/aur"
-          
-          # Sync files required by AUR
+
           cp -f PKGBUILD .SRCINFO "$TMPDIR/aur/"
-          
           cd "$TMPDIR/aur"
-          
-          # Ensure we have a branch (empty AUR repos have no HEAD yet)
+
+          # handle first push into empty repo
           if ! git symbolic-ref -q HEAD >/dev/null; then
             git checkout -b master
           fi
-          
+
           git config user.name  "${GIT_AUTHOR_NAME}"
           git config user.email "${GIT_AUTHOR_EMAIL}"
-          
-          # Stage, then check if there is anything to commit
+
           git add -A
           if git diff --cached --quiet; then
             echo "No changes to push to AUR."
             exit 0
           fi
-          
-          git commit -m "AUR: hypr-local-workspaces v${{ steps.meta.outputs.pkgver }}"
-          # Push explicitly to master to cover first-push case
+
+          git commit -m "AUR: ${{ steps.meta.outputs.pkgname }} v${{ steps.ver.outputs.pkgver }}"
           git push origin HEAD:master
