@@ -16,7 +16,7 @@ build() {
   cd "$srcdir/hypr-local-workspaces-$pkgver"
   export CGO_ENABLED=0
   go build -trimpath -ldflags "-s -w -X main.version=$pkgver" \
-    -o hypr-local-workspaces .
+    -o hypr-local-workspaces ./cmd/hypr-local-workspaces
 }
 
 package() {

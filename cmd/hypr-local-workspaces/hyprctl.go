@@ -3,10 +3,12 @@ package main
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/xKirtle/hypr-local-workspaces/internal/util"
 )
 
 func runHyprctl(args ...string) error {
-	_, status, err := Run("hyprctl", args...)
+	_, status, err := util.Run("hyprctl", args...)
 	if err != nil {
 		return err
 	}

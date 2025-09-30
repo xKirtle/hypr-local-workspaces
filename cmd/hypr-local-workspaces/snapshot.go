@@ -5,12 +5,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/xKirtle/hypr-local-workspaces/internal/util"
 )
 
 // capture a single `-j` query
 func hyprJSON(query string) ([]byte, error) {
 	args := []string{"-j", query}
-	out, status, err := RunWith("hyprctl", args, CaptureOutput(), WithTimeout(2*time.Second))
+	out, status, err := util.RunWith("hyprctl", args, util.CaptureOutput(), util.WithTimeout(2*time.Second))
 
 	if err != nil {
 		return nil, err

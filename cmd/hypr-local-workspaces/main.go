@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/xKirtle/hypr-local-workspaces/internal/util"
 )
 
 func main() {
@@ -119,5 +121,5 @@ func printRootUsage() {
 func fail(err error) {
 	_, _ = fmt.Fprintln(os.Stderr, "Error:", err)
 	printRootUsage()
-	os.Exit(ExitMissingArgs)
+	os.Exit(util.ExitMissingArgs)
 }
