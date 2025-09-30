@@ -109,3 +109,11 @@ jobs:
 
           git commit -m "AUR: ${{ steps.meta.outputs.pkgname }} v${{ steps.ver.outputs.pkgver }}"
           git push origin HEAD:master
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
