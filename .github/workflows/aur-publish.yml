@@ -34,13 +34,11 @@ jobs:
         run: |
           set -euo pipefail
           PKGVER="${{ steps.ver.outputs.pkgver }}"
-          # overwrite pkgver=... line
-          sed -E -i "s/^(pkgver=).*/\1${PKGVER}/" PKGBUILD
-          # reset pkgrel to 1 (optional but recommended for new upstream)
-          if grep -qE '^[[:space:]]*pkgrel=' PKGBUILD; then
-            sed -E -i 's/^(pkgrel=).*/\11/' PKGBUILD
+          sed -Ei "s/^pkgver=.*/pkgver=${PKGVER}/" PKGBUILD
+          if grep -q '^pkgrel=' PKGBUILD; then
+            sed -Ei 's/^pkgrel=.*/pkgrel=1/' PKGBUILD
           else
-            echo "pkgrel=1" >> PKGBUILD
+            echo 'pkgrel=1' >> PKGBUILD
           fi
 
       - name: Update checksums (updpkgsums)
