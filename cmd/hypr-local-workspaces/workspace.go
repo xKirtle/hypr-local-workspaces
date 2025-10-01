@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"sort"
-	"strconv"
 )
 
 func GetFocusedMonitor(monitors []MonitorDTO, activeWorkspace WorkspaceDTO) (MonitorDTO, bool) {
@@ -159,7 +158,7 @@ func CompactLocalWorkspacesSimple(monitorDTO MonitorDTO, localWorkspaces []Works
 }
 
 func TargetNameForWorkspace(monitorID, workspaceNumber int) string {
-	return zeroWidthToken(monitorID) + strconv.Itoa(workspaceNumber)
+	return GetZeroWidthName(monitorID, workspaceNumber)
 }
 
 func GetClientsOnWorkspace(workspaceID int, clients []ClientDTO) []ClientDTO {

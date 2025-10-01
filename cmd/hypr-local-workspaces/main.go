@@ -55,7 +55,7 @@ func main() {
 
 func parseGotoArgs(args []string) (int, error) {
 	if len(args) != 1 {
-		return 0, errors.New("usage: mytool goto <1..9>")
+		return 0, errors.New("usage: hypr-local-workspaces goto <1..9>")
 	}
 
 	v, err := strconv.Atoi(args[0])
@@ -79,7 +79,7 @@ func parseMoveArgs(args []string) (int, bool, error) {
 	// After parsing, any leftover args are positional
 	pos := fs.Args()
 	if len(pos) != 1 {
-		return 0, false, errors.New("usage: workspace move <1..9> [--all]")
+		return 0, false, errors.New("usage: hypr-local-workspaces move <1..9> [--all]")
 	}
 
 	v, err := strconv.Atoi(pos[0])
@@ -92,7 +92,7 @@ func parseMoveArgs(args []string) (int, bool, error) {
 
 func parseCycleArgs(args []string) (string, error) {
 	if len(args) != 1 {
-		return "", errors.New("usage: workspace cycle <up|down>")
+		return "", errors.New("usage: hypr-local-workspaces cycle <up|down>")
 	}
 
 	val := strings.ToLower(args[0])
@@ -113,9 +113,9 @@ func splitSubcommand(argv []string) (string, []string, error) {
 
 func printRootUsage() {
 	_, _ = fmt.Fprintln(os.Stderr, `Usage:
-  workspace goto  <1..9>
-  workspace move  <1..9> [--all]
-  workspace cycle <up|down>`)
+  hypr-local-workspaces goto  <1..9>
+  hypr-local-workspaces move  <1..9> [--all]
+  hypr-local-workspaces cycle <up|down>`)
 }
 
 func fail(err error) {

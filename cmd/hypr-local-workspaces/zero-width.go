@@ -9,10 +9,8 @@ import (
 func zeroWidthToken(monitorID int) string {
 	switch monitorID {
 	case 0:
-		// return "\u2060\u200D"
 		return "\u200B\u200C"
 	case 1:
-		// return "\u200D\u2060"
 		return "\u200D\u2060"
 	default:
 		return "\u200E\u200F"
