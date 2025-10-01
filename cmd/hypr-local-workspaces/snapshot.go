@@ -157,3 +157,5 @@ func TakeSnapshot(mask FetchMask) (Snapshot, error) {
 
 	return snapshot, nil
 }
+
+// TODO: Why are there hyprctl functions here and not in hyprctl.go?

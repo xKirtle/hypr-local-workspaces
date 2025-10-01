@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 // TODO: Refactor to reduce code duplication between GoToWorkspace, MoveToWorkspace and CycleWorkspace
@@ -144,9 +145,8 @@ func CycleWorkspace(direction string) error {
 	return HyprctlWorkspace(workspaceName)
 }
 
-// IMPROVEMENT: Not very robust. Assumes default workspace behavior of Hyprland
-// (one workspace per monitor, workspaces named "1", "2", ... on each monitor)
-// If there are custom-named workspaces or multiple workspaces per monitor, this may misbehave
+// IMPROVEMENT: Workspace ordering relies on either parsed slot numbers or Hyprland IDs;
+// numbering may differ from the user's desired custom ordering in niche setups.
 
 func InitWorkspaces() error {
 	monitors, err := fetchMonitors()
@@ -154,26 +154,45 @@ func InitWorkspaces() error {
 		return fmt.Errorf("error fetching monitors: %w", err)
 	}
 
+	if len(monitors) == 0 {
+		return nil
+	}
+
+	workspaces, err := fetchWorkspaces()
+	if err != nil {
+		return fmt.Errorf("error fetching workspaces: %w", err)
+	}
+
+	// remember focused monitor to restore later
+	focusedMonitorID := monitors[0].ID
+
 	for _, monitor := range monitors {
-		err := HyprctlFocusMonitor(monitor.ID)
-		if err != nil {
-			return fmt.Errorf("error focusing monitor %d: %w", monitor.ID, err)
-		}
-
-		workspace, err := fetchActiveWorkspace()
-		if err != nil {
-			return fmt.Errorf("error fetching active workspace on monitor %d: %w", monitor.ID, err)
-		}
-
-		targetName := TargetNameForWorkspace(monitor.ID, 1)
-
-		if workspace.Name != targetName {
-			err = HyprctlRenameWorkspace(workspace.ID, targetName)
-			if err != nil {
-				return fmt.Errorf("error renaming workspace %q to %q: %w", workspace.Name, targetName, err)
-			}
+		if monitor.Focused {
+			focusedMonitorID = monitor.ID
+			break
 		}
 	}
 
-	return HyprctlFocusMonitor(monitors[0].ID)
+	for _, monitor := range monitors {
+		localWorkspaces, err := GetSortedLocalWorkspaces(workspaces, monitor.ID)
+		if err != nil {
+			localWorkspaces = make([]WorkspaceDTO, 0, len(workspaces))
+			for _, workspace := range workspaces {
+				if workspace.MonitorID == monitor.ID {
+					localWorkspaces = append(localWorkspaces, workspace)
+				}
+			}
+
+			sort.Slice(localWorkspaces, func(i, j int) bool {
+				return localWorkspaces[i].ID < localWorkspaces[j].ID
+			})
+		}
+
+		err = CompactLocalWorkspacesSimple(monitor, localWorkspaces)
+		if err != nil {
+			return fmt.Errorf("error compacting workspaces on monitor %d: %w", monitor.ID, err)
+		}
+	}
+
+	return HyprctlFocusMonitor(focusedMonitorID)
 }
