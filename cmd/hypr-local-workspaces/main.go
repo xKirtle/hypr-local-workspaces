@@ -87,6 +87,10 @@ func parseMoveArgs(args []string) (int, bool, error) {
 		return 0, false, errors.New("move expects an integer digit")
 	}
 
+	if v < 1 || v > 9 {
+		return 0, false, errors.New("move index must be a digit 1..9")
+	}
+
 	return v, *all, nil
 }
 
