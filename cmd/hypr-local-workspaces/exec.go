@@ -1,14 +1,24 @@
-package util
+package main
 
 import (
 	"bytes"
 	"context"
 	"errors"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"syscall"
 	"time"
+)
+
+const (
+	ExitSuccess     = 0   // Successful execution
+	ExitFailure     = 1   // General failure
+	ExitMissingArgs = 2   // Not enough arguments provided
+	ExitTimeout     = 124 // Command timed out (like GNU timeout)
+	ExitNotFound    = 127 // Command not found
+	ExitInterrupted = 130 // Script terminated by Control-C
 )
 
 type CmdOptions struct {
@@ -223,7 +233,7 @@ func RunWith(bin string, args []string, opts ...CmdOpt) ([]byte, int, error) {
 func MustRun(bin string, args ...string) ([]byte, int) {
 	out, code, err := Run(bin, args...)
 	if err != nil {
-		Check(err, "running %s %v", bin, args)
+		log.Fatalf("running %s %v: %v", bin, args, err)
 	}
 
 	return out, code
@@ -232,7 +242,7 @@ func MustRun(bin string, args ...string) ([]byte, int) {
 func MustRunWith(bin string, args []string, opts ...CmdOpt) ([]byte, int) {
 	out, code, err := RunWith(bin, args, opts...)
 	if err != nil {
-		Check(err, "running %s %v", bin, args)
+		log.Fatalf("running %s %v: %v", bin, args, err)
 	}
 
 	return out, code

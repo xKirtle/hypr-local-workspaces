@@ -7,8 +7,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
-
-	"github.com/xKirtle/hypr-local-workspaces/internal/util"
+	"time"
 )
 
 func main() {
@@ -17,22 +16,29 @@ func main() {
 		fail(err)
 	}
 
+	action := NewAction(
+		NewHyprctlClient(2*time.Second),
+		NewDispatcherClient(),
+	)
+
 	switch subcmd {
 	case "goto":
-		targetIndex, err := parseGotoArgs(subArgs)
+		targetWorkspace, err := parseGotoArgs(subArgs)
 		if err != nil {
 			fail(err)
 		}
 
-		_ = GoToWorkspace(targetIndex)
+		targetIndex := targetWorkspace - 1
+		_ = action.GoToWorkspace(targetIndex)
 
 	case "move":
-		targetIndex, all, err := parseMoveArgs(subArgs)
+		targetWorkspace, all, err := parseMoveArgs(subArgs)
 		if err != nil {
 			fail(err)
 		}
 
-		_ = MoveToWorkspace(targetIndex, all)
+		targetIndex := targetWorkspace - 1
+		_ = action.MoveToWorkspace(targetIndex, all)
 
 	case "cycle":
 		dir, err := parseCycleArgs(subArgs)
@@ -40,13 +46,13 @@ func main() {
 			fail(err)
 		}
 
-		_ = CycleWorkspace(dir)
+		_ = action.CycleWorkspace(dir)
 
 	case "init":
-		_ = InitWorkspaces()
+		_ = action.InitWorkspaces()
 
 	case "help", "-h", "--help", "":
-		printRootUsage()
+		printUsage()
 
 	default:
 		fail(fmt.Errorf("unknown subcommand: %q", subcmd))
@@ -100,8 +106,8 @@ func parseCycleArgs(args []string) (string, error) {
 	}
 
 	val := strings.ToLower(args[0])
-	if val != "up" && val != "down" {
-		return "", errors.New("cycle direction must be 'up' or 'down'")
+	if val != "next" && val != "prev" {
+		return "", errors.New("cycle direction must be 'next' or 'prev'")
 	}
 
 	return val, nil
@@ -115,15 +121,15 @@ func splitSubcommand(argv []string) (string, []string, error) {
 	return argv[1], argv[2:], nil
 }
 
-func printRootUsage() {
+func printUsage() {
 	_, _ = fmt.Fprintln(os.Stderr, `Usage:
   hypr-local-workspaces goto  <1..9>
   hypr-local-workspaces move  <1..9> [--all]
-  hypr-local-workspaces cycle <up|down>`)
+  hypr-local-workspaces cycle <next|prev>`)
 }
 
 func fail(err error) {
 	_, _ = fmt.Fprintln(os.Stderr, "Error:", err)
-	printRootUsage()
-	os.Exit(util.ExitMissingArgs)
+	printUsage()
+	os.Exit(ExitMissingArgs)
 }

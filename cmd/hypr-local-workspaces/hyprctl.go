@@ -1,55 +1,55 @@
 package main
 
-import (
-	"fmt"
-	"strconv"
+import "time"
 
-	"github.com/xKirtle/hypr-local-workspaces/internal/util"
-)
+func NewHyprctlClient(timeout time.Duration) hyprctl {
+	return &hyprctlClient{timeout: timeout}
+}
 
-func runHyprctl(args ...string) error {
-	_, status, err := util.Run("hyprctl", args...)
-	if err != nil {
-		return err
-	}
+func NewDispatcherClient() dispatcher {
+	return &dispatcherClient{}
+}
 
-	if status != 0 {
-		return fmt.Errorf("hyprctl %v exited with status %d", args, status)
-	}
+func (c *hyprctlClient) GetMonitors() ([]MonitorDTO, error) {
+	return nil, nil
+}
 
+func (c *hyprctlClient) GetWorkspaces() ([]WorkspaceDTO, error) {
+	return nil, nil
+}
+
+func (c *hyprctlClient) GetClients() ([]ClientDTO, error) {
+	return nil, nil
+}
+
+func (c *hyprctlClient) GetActiveWorkspace() (WorkspaceDTO, error) {
+	return WorkspaceDTO{}, nil
+}
+
+func (c *hyprctlClient) GetActiveWindow() (ClientDTO, error) {
+	return ClientDTO{}, nil
+}
+
+func (c *hyprctlClient) GetActiveMonitorID() (int, error) {
+	return 0, nil
+}
+
+func (d *dispatcherClient) Workspace(wsName string) error {
 	return nil
 }
 
-func HyprctlWorkspace(name string) error {
-	return runHyprctl("dispatch", "workspace", "name:"+name)
-}
-
-func HyprctlRenameWorkspace(id int, newName string) error {
-	return runHyprctl("dispatch", "renameworkspace", strconv.Itoa(id), newName)
-}
-
-func HyprctlMoveToWorkspaceAll(workspaceName string, clients []ClientDTO) error {
-	for _, client := range clients {
-		err := HyprctlMoveToWorkspace(workspaceName, client.Address)
-		if err != nil {
-			return err
-		}
-	}
-
+func (d *dispatcherClient) RenameWorkspace(id int, wsNewName string) error {
 	return nil
 }
 
-func HyprctlMoveToWorkspace(targetName, windowAddr string) error {
-	// name:...,address:... must be a single argument
-	arg := fmt.Sprintf("name:%s,address:%s", targetName, windowAddr)
-	err := runHyprctl("dispatch", "movetoworkspace", arg)
-	if err != nil {
-		return fmt.Errorf("moving window %q to workspace %q: %w", windowAddr, targetName, err)
-	}
-
+func (d *dispatcherClient) FocusMonitor(monitorId int) error {
 	return nil
 }
 
-func HyprctlFocusMonitor(monitorId int) error {
-	return runHyprctl("dispatch", "focusmonitor", strconv.Itoa(monitorId))
+func (d *dispatcherClient) MoveAllToWorkspace(wsName string) error {
+	return nil
+}
+
+func (d *dispatcherClient) MoveToWorkspace(wsName, windowAddr string) error {
+	return nil
 }
