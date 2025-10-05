@@ -2,6 +2,13 @@ package main
 
 import "time"
 
+func NewAction(hyprctl hyprctl, dispatcher dispatcher) *Action {
+	return &Action{
+		hyprctl:    hyprctl,
+		dispatcher: dispatcher,
+	}
+}
+
 func NewHyprctlClient(timeout time.Duration) hyprctl {
 	return &hyprctlClient{timeout: timeout}
 }

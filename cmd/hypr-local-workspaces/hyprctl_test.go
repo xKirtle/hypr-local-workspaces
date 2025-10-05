@@ -70,36 +70,3 @@ func (m *mockDispatcher) MoveToWorkspace(wsName, windowAddr string) error {
 	args := m.Called(wsName, windowAddr)
 	return args.Error(0)
 }
-
-// TODO: Maybe I don't need to recreate a live hyprctl state for tests, just mock the calls and return values I expect.
-func sampleMonitors() []MonitorDTO {
-	return []MonitorDTO{
-		{
-			ID:      0,
-			Name:    "DP-1",
-			Focused: true,
-			ActiveWorkspace: SimpleWorkspace{
-				ID:   1,
-				Name: "1\u200b\u200b",
-			},
-		},
-		{
-			ID:      1,
-			Name:    "DP-2",
-			Focused: false,
-			ActiveWorkspace: SimpleWorkspace{
-				ID:   2,
-				Name: "1\u200c\u200b",
-			},
-		},
-		{
-			ID:      2,
-			Name:    "DP-3",
-			Focused: false,
-			ActiveWorkspace: SimpleWorkspace{
-				ID:   3,
-				Name: "1\u200d\u200b",
-			},
-		},
-	}
-}
