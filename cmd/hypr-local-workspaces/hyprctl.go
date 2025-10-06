@@ -1,55 +1,74 @@
 package main
 
 import (
-	"fmt"
-	"strconv"
-
-	"github.com/xKirtle/hypr-local-workspaces/internal/util"
+	"encoding/json"
+	"time"
 )
 
-func runHyprctl(args ...string) error {
-	_, status, err := util.Run("hyprctl", args...)
+const (
+	HyprctlTimeout = 2 * time.Second
+)
+
+func NewHyprctlClient(timeout time.Duration) hyprctl {
+	return &hyprctlClient{timeout: timeout}
+}
+
+func hyprJson(cmd string) ([]byte, error) {
+	args := []string{"-j", cmd}
+	out, _, err := RunWith("hyprctl", args, CaptureOutput(), WithTimeout(HyprctlTimeout))
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if status != 0 {
-		return fmt.Errorf("hyprctl %v exited with status %d", args, status)
-	}
-
-	return nil
+	return out, nil
 }
 
-func HyprctlWorkspace(name string) error {
-	return runHyprctl("dispatch", "workspace", "name:"+name)
-}
+func hyprJsonDecode[T any](cmd string) (T, error) {
+	out, err := hyprJson(cmd)
 
-func HyprctlRenameWorkspace(id int, newName string) error {
-	return runHyprctl("dispatch", "renameworkspace", strconv.Itoa(id), newName)
-}
-
-func HyprctlMoveToWorkspaceAll(workspaceName string, clients []ClientDTO) error {
-	for _, client := range clients {
-		err := HyprctlMoveToWorkspace(workspaceName, client.Address)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func HyprctlMoveToWorkspace(targetName, windowAddr string) error {
-	// name:...,address:... must be a single argument
-	arg := fmt.Sprintf("name:%s,address:%s", targetName, windowAddr)
-	err := runHyprctl("dispatch", "movetoworkspace", arg)
 	if err != nil {
-		return fmt.Errorf("moving window %q to workspace %q: %w", windowAddr, targetName, err)
+		var emptyT T
+		return emptyT, err
 	}
 
-	return nil
+	var result T
+	err = json.Unmarshal(out, &result)
+
+	if err != nil {
+		var emptyT T
+		return emptyT, err
+	}
+
+	return result, nil
 }
 
-func HyprctlFocusMonitor(monitorId int) error {
-	return runHyprctl("dispatch", "focusmonitor", strconv.Itoa(monitorId))
+func (c *hyprctlClient) GetMonitors() ([]MonitorDTO, error) {
+	return hyprJsonDecode[[]MonitorDTO]("monitors")
+}
+
+func (c *hyprctlClient) GetWorkspaces() ([]WorkspaceDTO, error) {
+	return hyprJsonDecode[[]WorkspaceDTO]("workspaces")
+}
+
+func (c *hyprctlClient) GetClients() ([]ClientDTO, error) {
+	return hyprJsonDecode[[]ClientDTO]("clients")
+}
+
+func (c *hyprctlClient) GetActiveWorkspace() (WorkspaceDTO, error) {
+	return hyprJsonDecode[WorkspaceDTO]("activeworkspace")
+}
+
+func (c *hyprctlClient) GetActiveWindow() (ClientDTO, error) {
+	return hyprJsonDecode[ClientDTO]("activewindow")
+}
+
+func (c *hyprctlClient) GetActiveMonitorID() (int, error) {
+	activeWs, err := c.GetActiveWorkspace()
+
+	if err != nil {
+		return -1, err
+	}
+
+	return activeWs.MonitorID, nil
 }

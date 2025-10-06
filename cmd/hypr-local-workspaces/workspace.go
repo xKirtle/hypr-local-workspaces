@@ -1,173 +1,144 @@
 package main
 
-import (
-	"fmt"
-	"sort"
-)
+import "sort"
 
-func GetFocusedMonitor(monitors []MonitorDTO, activeWorkspace WorkspaceDTO) (MonitorDTO, bool) {
-	if len(monitors) == 1 {
-		return monitors[0], true
+func GetWorkspacesOnMonitor(hyprctl hyprctl, monitorId int) ([]WorkspaceDTO, error) {
+	workspaces, err := hyprctl.GetWorkspaces()
+	if err != nil {
+		return nil, err
 	}
 
-	// Trust Hyprland's focused flag
-	for _, monitor := range monitors {
-		if monitor.Focused {
-			return monitor, true
+	var monitorWorkspaces []WorkspaceDTO
+	for _, ws := range workspaces {
+		if ws.MonitorID == monitorId {
+			monitorWorkspaces = append(monitorWorkspaces, ws)
 		}
 	}
 
-	// If, for some reason, Hyprland focused flag is not being updated or doesn't exist,
-	// return the monitor that hosts the active workspace.
-	if activeWorkspace.Monitor != "" {
-		for _, monitor := range monitors {
-			if monitor.Name == activeWorkspace.Monitor {
-				return monitor, true
+	return monitorWorkspaces, nil
+}
+
+func GetSortedWorkspacesOnMonitor(hyprctl hyprctl, monitorId int) ([]WorkspaceDTO, error) {
+	workspaces, err := GetWorkspacesOnMonitor(hyprctl, monitorId)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sort by name, ignoring zero-width chars
+	sort.Slice(workspaces, func(i, j int) bool {
+		nameI, errI := GetZeroWidthNameToIndex(workspaces[i].Name)
+		nameJ, errJ := GetZeroWidthNameToIndex(workspaces[j].Name)
+		if errI != nil || errJ != nil {
+			// TODO: How to handle errors here?
+			// For now, just fall back to id comparison
+
+			return workspaces[i].ID < workspaces[j].ID
+		}
+
+		return nameI < nameJ
+	})
+
+	return workspaces, nil
+}
+
+func DecideTargetWorkspaceIndex(currentIndex, targetIndex int, sortedWorkspaces []WorkspaceDTO) (int, bool) {
+	n := len(sortedWorkspaces)
+
+	// Normalize into [0..n]
+	if targetIndex < 0 {
+		targetIndex = 0
+	} else if targetIndex > n {
+		targetIndex = n
+	}
+
+	// Special-case: avoid compaction when on last empty slot and requesting a new slot
+	if n > 0 && targetIndex == n && currentIndex == n-1 {
+		if sortedWorkspaces[currentIndex].WindowsCount == 0 {
+			return currentIndex, false
+		}
+	}
+
+	compact := false
+
+	// Only compute compaction when currentIndex is within existing bounds and we're moving
+	if targetIndex != currentIndex && currentIndex >= 0 && currentIndex < n {
+		// Leaving an empty workspace will require compaction
+		if sortedWorkspaces[currentIndex].WindowsCount == 0 {
+			compact = true
+		}
+
+		// Check if we're skipping over any empty existing workspace between current and target
+		low, high := currentIndex, targetIndex
+		if low > high {
+			// Swap low and high
+			low, high = targetIndex, currentIndex
+		}
+
+		// Clamp high to n-1 to avoid scanning the synthetic N index
+		if high > n-1 {
+			high = n - 1
+		}
+
+		for i := low + 1; i <= high; i++ {
+			if i >= 0 && i < n && sortedWorkspaces[i].WindowsCount == 0 {
+				compact = true
+				break
 			}
 		}
 	}
 
-	return MonitorDTO{}, false
+	return targetIndex, compact
 }
 
-func GetSortedLocalWorkspaces(workspaces []WorkspaceDTO, monitorID int) ([]WorkspaceDTO, error) {
-	type tmpWorkspaceDTO struct {
-		workspace      WorkspaceDTO
-		workspaceIndex int
+func GetWorkspaceIndexOnList(sortedLocalWs []WorkspaceDTO, workspaceID int) int {
+	for i, ws := range sortedLocalWs {
+		if ws.ID == workspaceID {
+			return i
+		}
 	}
 
-	tmp := make([]tmpWorkspaceDTO, 0, len(workspaces))
-	for _, workspace := range workspaces {
-		if workspace.MonitorID != monitorID {
+	return -1
+}
+
+func CompactLocalWorkspacesOnMonitor(action *Action, monitorID int, fixNames bool) error {
+	hyprctl, dispatcher := action.hyprctl, action.dispatcher
+
+	sortedLocalWs, err := GetSortedWorkspacesOnMonitor(hyprctl, monitorID)
+	if err != nil {
+		return err
+	}
+
+	for i, ws := range sortedLocalWs {
+		wsIndex, err := GetZeroWidthNameToIndex(ws.Name)
+
+		if err != nil {
+			if !fixNames {
+				return err
+			}
+		}
+
+		if err == nil && wsIndex == i {
 			continue
 		}
-		workspaceIndex, err := ParseLocalWorkspace(workspace.Name)
+
+		newName, err := GetZeroWidthNameFromIndex(monitorID, i)
+
+		// Can't really happen? monitorID or index i would have to be out of range
+		// However, monitorID is also checked when fetching sortedLocalWs above
+		// So really only index i would have to be out of range, which is impossible in this loop?
 		if err != nil {
-			return nil, err
+			return err
 		}
 
-		tmp = append(tmp, tmpWorkspaceDTO{workspace, workspaceIndex})
-	}
-	sort.Slice(tmp, func(i, j int) bool {
-		return tmp[i].workspaceIndex < tmp[j].workspaceIndex
-	})
-
-	result := make([]WorkspaceDTO, len(tmp))
-	for i := range tmp {
-		result[i] = tmp[i].workspace
-	}
-
-	return result, nil
-}
-
-func ActiveLocalIndex(localWorkspaces []WorkspaceDTO, active WorkspaceDTO) (int, error) {
-	activeSlot, err := ParseLocalWorkspace(active.Name)
-	if err != nil {
-		return -1, err
-	}
-
-	for i, w := range localWorkspaces {
-		s, err := ParseLocalWorkspace(w.Name)
-		if err != nil {
-			return -1, err
-		}
-		if s == activeSlot {
-			return i, nil
-		}
-	}
-
-	return -1, nil
-}
-
-func LastOccupiedLocalIndex(localWorkspaces []WorkspaceDTO) int {
-	last := -1
-	for i, w := range localWorkspaces {
-		if w.Windows > 0 {
-			last = i
-		}
-	}
-
-	return last
-}
-
-// DecideGoToTargetIndex returns (targetIndex, noOp).
-// 0-based indexes; creation is signaled by targetIndex == len(localWorkspaces).
-func DecideGoToTargetIndex(requested int, localWorkspaces []WorkspaceDTO, curIndex int) (int, bool) {
-	requestedIndex := requested - 1 // convert to 0-based
-
-	if requestedIndex == curIndex {
-		return requested, true
-	}
-
-	if requestedIndex < 0 {
-		return 0, true
-	}
-
-	lastOcc := LastOccupiedLocalIndex(localWorkspaces) // -1 if none
-	boundary := lastOcc + 1
-
-	// We allow at most:
-	// - focus up to boundary (which may be an existing empty index)
-	// - and, if boundary == len(localWorkspaces), allow creation at exactly len(localWorkspaces)
-	if boundary > len(localWorkspaces) { // should only be == or <, but safe
-		boundary = len(localWorkspaces)
-	}
-
-	// Clamp
-	target := requestedIndex
-	if target > boundary {
-		target = boundary
-	}
-
-	if target < 0 {
-		target = 0
-	}
-
-	// empty-upward guard: don't move up from an empty current
-	if curIndex >= 0 && target > curIndex && localWorkspaces[curIndex].Windows == 0 {
-		return curIndex, true
-	}
-
-	// same index -> no-op
-	if curIndex >= 0 && target == curIndex {
-		return target, true
-	}
-
-	return target, false
-}
-
-// CompactLocalWorkspacesSimple renames local workspaces on the given monitor to be sequentially numbered from 1.
-func CompactLocalWorkspacesSimple(monitorDTO MonitorDTO, localWorkspaces []WorkspaceDTO) error {
-	if len(localWorkspaces) == 0 {
-		return nil
-	}
-
-	for i, workspace := range localWorkspaces {
-		targetWorkspaceName := TargetNameForWorkspace(monitorDTO.ID, i+1)
-		if workspace.Name == targetWorkspaceName {
-			continue // noop
+		// Should never happen either
+		if ws.Name == newName {
+			continue
 		}
 
-		err := HyprctlRenameWorkspace(workspace.ID, targetWorkspaceName)
-		if err != nil {
-			return fmt.Errorf("rename %q -> %q: %w", workspace.Name, targetWorkspaceName, err)
+		if err := dispatcher.RenameWorkspace(ws.ID, newName); err != nil {
+			return err
 		}
 	}
 
 	return nil
-}
-
-func TargetNameForWorkspace(monitorID, workspaceNumber int) string {
-	return GetZeroWidthName(monitorID, workspaceNumber)
-}
-
-func GetClientsOnWorkspace(workspaceID int, clients []ClientDTO) []ClientDTO {
-	result := make([]ClientDTO, 0)
-	for _, client := range clients {
-		if client.Workspace.ID == workspaceID {
-			result = append(result, client)
-		}
-	}
-
-	return result
 }
