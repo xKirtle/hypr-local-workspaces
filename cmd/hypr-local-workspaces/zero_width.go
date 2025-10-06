@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strconv"
+	"unicode/utf8"
 )
 
 var zeroWidthDigits = []rune{
@@ -68,6 +69,15 @@ func GetZeroWidthNameToIndex(name string) (int, error) {
 
 	if lastDigitIndex == 0 {
 		return -1, fmt.Errorf("workspace name does not start with a digit: %q", name)
+	}
+
+	// Enforce that after the leading digits, the next rune is a zero-width marker
+	if lastDigitIndex >= len(name) {
+		return -1, fmt.Errorf("workspace name contains no zero-width characters: %q", name)
+	}
+
+	if r, _ := utf8.DecodeRuneInString(name[lastDigitIndex:]); !((r >= 0x200B && r <= 0x200F) || (r >= 0x2060 && r <= 0x2064)) {
+		return -1, fmt.Errorf("workspace name contains no zero-width characters: %q", name)
 	}
 
 	index, err := strconv.Atoi(name[:lastDigitIndex])

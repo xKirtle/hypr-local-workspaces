@@ -2,6 +2,8 @@ package main
 
 import "fmt"
 
+// TODO: Go through the whole code and wrap context around errors instead of just returning them raw.
+
 func NewAction(hyprctl hyprctl, dispatcher dispatcher) *Action {
 	return &Action{
 		hyprctl:    hyprctl,
@@ -146,5 +148,19 @@ func (a *Action) CycleWorkspace(direction string) error {
 }
 
 func (a *Action) InitWorkspaces() error {
-	return CompactLocalWorkspacesOnMonitor(a, 0)
+	monitors, err := a.hyprctl.GetMonitors()
+
+	if err != nil {
+		return err
+	}
+
+	for _, mon := range monitors {
+		err := CompactLocalWorkspacesOnMonitor(a, mon.ID, true)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

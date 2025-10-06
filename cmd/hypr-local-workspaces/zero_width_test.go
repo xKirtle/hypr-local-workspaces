@@ -53,6 +53,8 @@ func TestGetZeroWidthNameToIndex(t *testing.T) {
 		{"-1\u200b", -1, true},
 		{"", -1, true},
 		{"abc", -1, true},
+		{"999999999999999999999999\u200b", -1, true},
+		{"10\u2000", -1, true},
 	}
 
 	for i, test := range tests {

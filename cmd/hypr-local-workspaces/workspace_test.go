@@ -245,7 +245,7 @@ func TestCompactLocalWorkspacesOnMonitor_CompactsList(t *testing.T) {
 	dispatcher.On("RenameWorkspace", 15, expected[3].Name).Return(nil)
 
 	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
-	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID, false)
 
 	assert.NoError(t, err)
 }
@@ -261,7 +261,7 @@ func TestCompactLocalWorkspacesOnMonitor_PropagatesErrors(t *testing.T) {
 	hypr.On("GetWorkspaces").Return(([]WorkspaceDTO)(nil), sentinelErr)
 
 	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
-	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID, false)
 
 	assert.ErrorIs(t, err, sentinelErr)
 }
@@ -279,7 +279,7 @@ func TestCompactLocalWorkspacesOnMonitor_PropagatesGetZeroWidthNameToIndexErrors
 	}, nil)
 
 	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
-	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID, false)
 
 	assert.Error(t, err)
 }
@@ -299,7 +299,7 @@ func TestCompactLocalWorkspacesOnMonitor_HandlesNoRenameNeeded(t *testing.T) {
 	}, nil)
 
 	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
-	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID, false)
 
 	assert.NoError(t, err)
 }
@@ -322,7 +322,161 @@ func TestCompactLocalWorkspacesOnMonitor_PropagatesRenameWorkspaceErrors(t *test
 	dispatcher.On("RenameWorkspace", 10, "3\u200b\u200d").Return(sentinelErr)
 
 	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
-	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID, false)
 
 	assert.ErrorIs(t, err, sentinelErr)
+}
+
+func TestCompactLocalWorkspacesOnMonitor_FixesWorkspaceNames(t *testing.T) {
+	hypr := new(mockHyprctl)
+	dispatcher := new(mockDispatcher)
+	defer hypr.AssertExpectations(t)
+	defer dispatcher.AssertExpectations(t)
+
+	monitorID := 0
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 0},
+		{ID: 3, Name: "invalid-\xff", MonitorID: 0}, // Invalid UTF-8
+		{ID: 10, Name: "3\u200b\u200d", MonitorID: 0},
+		{ID: 15, Name: "ws-4", MonitorID: 0}, // Non-zero-width name
+	}, nil)
+
+	expected := []WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 0},
+		{ID: 3, Name: "2\u200b\u200c", MonitorID: 0},
+		{ID: 10, Name: "3\u200b\u200d", MonitorID: 0},
+		{ID: 15, Name: "4\u200b\u200e", MonitorID: 0},
+	}
+
+	dispatcher.On("RenameWorkspace", 3, expected[1].Name).Return(nil)
+	dispatcher.On("RenameWorkspace", 15, expected[3].Name).Return(nil)
+
+	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID, true)
+
+	assert.NoError(t, err)
+}
+
+func ws(id int, name string, monitorID int, windows int) WorkspaceDTO {
+	return WorkspaceDTO{ID: id, Name: name, MonitorID: monitorID, WindowsCount: windows}
+}
+
+func TestDecideTargetWorkspaceIndex_NormalizeClampLow(t *testing.T) {
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 1},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 1},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 1},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(1, -5, sorted)
+	assert.Equal(t, 0, targetIndex)
+	assert.False(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_NormalizeClampHigh(t *testing.T) {
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 1},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 1},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 1},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(1, 99, sorted)
+	assert.Equal(t, 3, targetIndex) // N == len(sorted)
+	assert.False(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_SpecialCase_LastEmptyRequestNew_NoOp(t *testing.T) {
+	// N=3, current=N-1 and empty, request N -> return current, false
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 1},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 1},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 0},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(2, 3, sorted)
+	assert.Equal(t, 2, targetIndex)
+	assert.False(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_LeavingEmptySetsCompact(t *testing.T) {
+	// Move away from an empty current workspace -> compact true
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 1},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 0},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 1},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(1, 2, sorted)
+	assert.Equal(t, 2, targetIndex)
+	assert.True(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_SkipEmptyUpwardSetsCompact(t *testing.T) {
+	// Skip over an empty workspace going up -> compact true
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 1},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 1},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 0},
+		{ID: 4, Name: "4", MonitorID: 0, WindowsCount: 1},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(0, 3, sorted)
+	assert.Equal(t, 3, targetIndex)
+	assert.True(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_SkipEmptyDownwardSetsCompact(t *testing.T) {
+	// Skip over an empty workspace going down -> compact true
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 1},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 0},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 1},
+		{ID: 4, Name: "4", MonitorID: 0, WindowsCount: 1},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(3, 0, sorted)
+	assert.Equal(t, 0, targetIndex)
+	assert.True(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_TargetEqualsCurrent_NoCompact(t *testing.T) {
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 0},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 1},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 1},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(0, 0, sorted)
+	assert.Equal(t, 0, targetIndex)
+	assert.False(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_InvalidCurrentIndexSkipsCompaction(t *testing.T) {
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 0},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 0},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 0},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(-1, 2, sorted)
+	assert.Equal(t, 2, targetIndex)
+	assert.False(t, compact)
+
+	targetIndex, compact = DecideTargetWorkspaceIndex(3, 1, sorted) // currentIndex == n
+	assert.Equal(t, 1, targetIndex)
+	assert.False(t, compact)
+}
+
+func TestDecideTargetWorkspaceIndex_ClampHighStillScansForEmpties(t *testing.T) {
+	// target > N clamps to N; scan should include up to N-1 and detect empties
+	sorted := []WorkspaceDTO{
+		{ID: 1, Name: "1", MonitorID: 0, WindowsCount: 1},
+		{ID: 2, Name: "2", MonitorID: 0, WindowsCount: 1},
+		{ID: 3, Name: "3", MonitorID: 0, WindowsCount: 0},
+		{ID: 4, Name: "4", MonitorID: 0, WindowsCount: 1},
+	}
+
+	targetIndex, compact := DecideTargetWorkspaceIndex(1, 10, sorted)
+	assert.Equal(t, 4, targetIndex) // N
+	assert.True(t, compact)         // empty at index 2 between 1 and 3
 }
