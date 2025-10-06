@@ -27,8 +27,8 @@ Just bind your workspace keys to the installed binary:
 
 ```conf
 # Cycle existing workspaces on focused monitor
-bind = $mainMod, Tab, exec, hypr-local-workspaces cycle up
-bind = $mainMod SHIFT, Tab, exec, hypr-local-workspaces cycle down
+bind = $mainMod, Tab, exec, hypr-local-workspaces cycle next
+bind = $mainMod SHIFT, Tab, exec, hypr-local-workspaces cycle prev
 
 # Switch workspaces relative to active monitor
 bind = $mainMod, 1, exec, hypr-local-workspaces goto 1
