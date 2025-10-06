@@ -123,14 +123,14 @@ func CompactLocalWorkspacesOnMonitor(action *Action, monitorID int) error {
 
 		newName, err := GetZeroWidthNameFromIndex(monitorID, i)
 
-		// Can't really happen either? monitorID or index i would have to be out of range
+		// Can't really happen? monitorID or index i would have to be out of range
 		// However, monitorID is also checked when fetching sortedLocalWs above
 		// So really only index i would have to be out of range, which is impossible in this loop?
 		if err != nil {
 			return err
 		}
 
-		// Should never happen
+		// Should never happen either
 		if ws.Name == newName {
 			continue
 		}

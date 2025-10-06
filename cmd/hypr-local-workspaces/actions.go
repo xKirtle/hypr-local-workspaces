@@ -146,5 +146,5 @@ func (a *Action) CycleWorkspace(direction string) error {
 }
 
 func (a *Action) InitWorkspaces() error {
-	return nil
+	return CompactLocalWorkspacesOnMonitor(a, 0)
 }

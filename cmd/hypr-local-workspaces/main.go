@@ -54,12 +54,6 @@ func main() {
 	case "help", "-h", "--help", "":
 		printUsage()
 
-	case "ws": // TODO: Remove after testing
-		monitorID := 1
-		targetIndex := 1
-		out, _ := GetZeroWidthNameFromIndex(monitorID, targetIndex)
-		fmt.Printf("%q\n", out)
-
 	default:
 		fail(fmt.Errorf("unknown subcommand: %q", subcmd))
 	}
