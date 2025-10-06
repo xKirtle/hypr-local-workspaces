@@ -1,62 +1,74 @@
 package main
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
-func NewAction(hyprctl hyprctl, dispatcher dispatcher) *Action {
-	return &Action{
-		hyprctl:    hyprctl,
-		dispatcher: dispatcher,
-	}
-}
+const (
+	HyprctlTimeout = 2 * time.Second
+)
 
 func NewHyprctlClient(timeout time.Duration) hyprctl {
 	return &hyprctlClient{timeout: timeout}
 }
 
-func NewDispatcherClient() dispatcher {
-	return &dispatcherClient{}
+func hyprJson(cmd string) ([]byte, error) {
+	args := []string{"-j", cmd}
+	out, _, err := RunWith("hyprctl", args, CaptureOutput(), WithTimeout(HyprctlTimeout))
+
+	if err != nil {
+		return nil, err
+	}
+
+	return out, nil
+}
+
+func hyprJsonDecode[T any](cmd string) (T, error) {
+	out, err := hyprJson(cmd)
+
+	if err != nil {
+		var emptyT T
+		return emptyT, err
+	}
+
+	var result T
+	err = json.Unmarshal(out, &result)
+
+	if err != nil {
+		var emptyT T
+		return emptyT, err
+	}
+
+	return result, nil
 }
 
 func (c *hyprctlClient) GetMonitors() ([]MonitorDTO, error) {
-	return nil, nil
+	return hyprJsonDecode[[]MonitorDTO]("monitors")
 }
 
 func (c *hyprctlClient) GetWorkspaces() ([]WorkspaceDTO, error) {
-	return nil, nil
+	return hyprJsonDecode[[]WorkspaceDTO]("workspaces")
 }
 
 func (c *hyprctlClient) GetClients() ([]ClientDTO, error) {
-	return nil, nil
+	return hyprJsonDecode[[]ClientDTO]("clients")
 }
 
 func (c *hyprctlClient) GetActiveWorkspace() (WorkspaceDTO, error) {
-	return WorkspaceDTO{}, nil
+	return hyprJsonDecode[WorkspaceDTO]("activeworkspace")
 }
 
 func (c *hyprctlClient) GetActiveWindow() (ClientDTO, error) {
-	return ClientDTO{}, nil
+	return hyprJsonDecode[ClientDTO]("activewindow")
 }
 
 func (c *hyprctlClient) GetActiveMonitorID() (int, error) {
-	return 0, nil
-}
+	activeWs, err := c.GetActiveWorkspace()
 
-func (d *dispatcherClient) Workspace(wsName string) error {
-	return nil
-}
+	if err != nil {
+		return -1, err
+	}
 
-func (d *dispatcherClient) RenameWorkspace(id int, wsNewName string) error {
-	return nil
-}
-
-func (d *dispatcherClient) FocusMonitor(monitorId int) error {
-	return nil
-}
-
-func (d *dispatcherClient) MoveAllToWorkspace(wsName string) error {
-	return nil
-}
-
-func (d *dispatcherClient) MoveToWorkspace(wsName, windowAddr string) error {
-	return nil
+	return activeWs.MonitorID, nil
 }
