@@ -98,7 +98,7 @@ func TestGetSortedWorkspacesOnMonitorPropagatesErrorsFromGetWorkspacesOnMonitor(
 	assert.ErrorIs(t, err, sentinelErr)
 }
 
-func TestGetSortedWorkspacesOnMonitorHandlesZeroWidthNameErrors(t *testing.T) {
+func TestGetSortedWorkspacesOnMonitorSortsByIdWhenInvalidZeroWidthNames(t *testing.T) {
 	hypr := new(mockHyprctl)
 	defer hypr.AssertExpectations(t)
 
@@ -185,34 +185,144 @@ func TestGetSortedWorkspacesOnMonitorGuardsAgainstAtoiOverflow(t *testing.T) {
 }
 
 func TestGetWorkspaceIndexOnList_FindsIndex(t *testing.T) {
-    list := []WorkspaceDTO{
-        {ID: 10, Name: "10"},
-        {ID: 2, Name: "2"},
-        {ID: 5, Name: "5"},
-    }
+	list := []WorkspaceDTO{
+		{ID: 10, Name: "10"},
+		{ID: 2, Name: "2"},
+		{ID: 5, Name: "5"},
+	}
 
-    idx := GetWorkspaceIndexOnList(list, 2)
-    assert.Equal(t, 1, idx)
+	idx := GetWorkspaceIndexOnList(list, 2)
+	assert.Equal(t, 1, idx)
 
-    idx = GetWorkspaceIndexOnList(list, 10)
-    assert.Equal(t, 0, idx)
+	idx = GetWorkspaceIndexOnList(list, 10)
+	assert.Equal(t, 0, idx)
 
-    idx = GetWorkspaceIndexOnList(list, 5)
-    assert.Equal(t, 2, idx)
+	idx = GetWorkspaceIndexOnList(list, 5)
+	assert.Equal(t, 2, idx)
 }
 
 func TestGetWorkspaceIndexOnList_NotFound(t *testing.T) {
-    list := []WorkspaceDTO{
-        {ID: 1, Name: "1"},
-        {ID: 3, Name: "3"},
-    }
+	list := []WorkspaceDTO{
+		{ID: 1, Name: "1"},
+		{ID: 3, Name: "3"},
+	}
 
-    idx := GetWorkspaceIndexOnList(list, 2)
-    assert.Equal(t, -1, idx)
+	idx := GetWorkspaceIndexOnList(list, 2)
+	assert.Equal(t, -1, idx)
 }
 
 func TestGetWorkspaceIndexOnList_EmptyList(t *testing.T) {
-    var list []WorkspaceDTO
-    idx := GetWorkspaceIndexOnList(list, 1)
-    assert.Equal(t, -1, idx)
+	var list []WorkspaceDTO
+	idx := GetWorkspaceIndexOnList(list, 1)
+	assert.Equal(t, -1, idx)
+}
+
+func TestCompactLocalWorkspacesOnMonitor_CompactsList(t *testing.T) {
+	hypr := new(mockHyprctl)
+	dispatcher := new(mockDispatcher)
+	defer hypr.AssertExpectations(t)
+	defer dispatcher.AssertExpectations(t)
+
+	monitorID := 0
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 0},
+		{ID: 3, Name: "3\u200b\u200d", MonitorID: 0},
+		{ID: 10, Name: "6\u200b\u2061", MonitorID: 0},
+		{ID: 15, Name: "8\u200b\u2063", MonitorID: 0},
+		{ID: 4, Name: "1\u200c\u200b", MonitorID: 1},
+		{ID: 5, Name: "1\u200d\u200b", MonitorID: 2},
+	}, nil)
+
+	expected := []WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 0},
+		{ID: 3, Name: "2\u200b\u200c", MonitorID: 0},
+		{ID: 10, Name: "3\u200b\u200d", MonitorID: 0},
+		{ID: 15, Name: "4\u200b\u200e", MonitorID: 0},
+	}
+
+	dispatcher.On("RenameWorkspace", 3, expected[1].Name).Return(nil)
+	dispatcher.On("RenameWorkspace", 10, expected[2].Name).Return(nil)
+	dispatcher.On("RenameWorkspace", 15, expected[3].Name).Return(nil)
+
+	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+
+	assert.NoError(t, err)
+}
+
+func TestCompactLocalWorkspacesOnMonitor_PropagatesErrors(t *testing.T) {
+	hypr := new(mockHyprctl)
+	dispatcher := new(mockDispatcher)
+	defer hypr.AssertExpectations(t)
+	defer dispatcher.AssertExpectations(t)
+
+	monitorID := 0
+	sentinelErr := errors.New("get workspaces failed")
+	hypr.On("GetWorkspaces").Return(([]WorkspaceDTO)(nil), sentinelErr)
+
+	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+
+	assert.ErrorIs(t, err, sentinelErr)
+}
+
+func TestCompactLocalWorkspacesOnMonitor_PropagatesGetZeroWidthNameToIndexErrors(t *testing.T) {
+	hypr := new(mockHyprctl)
+	dispatcher := new(mockDispatcher)
+	defer hypr.AssertExpectations(t)
+	defer dispatcher.AssertExpectations(t)
+
+	monitorID := 0
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 0},
+		{ID: 3, Name: "invalid-\xff", MonitorID: 0}, // Invalid UTF-8
+	}, nil)
+
+	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+
+	assert.Error(t, err)
+}
+
+func TestCompactLocalWorkspacesOnMonitor_HandlesNoRenameNeeded(t *testing.T) {
+	hypr := new(mockHyprctl)
+	dispatcher := new(mockDispatcher)
+	defer hypr.AssertExpectations(t)
+	defer dispatcher.AssertExpectations(t)
+
+	monitorID := 0
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 0},
+		{ID: 3, Name: "2\u200b\u200c", MonitorID: 0},
+		{ID: 10, Name: "3\u200b\u200d", MonitorID: 0},
+		{ID: 15, Name: "4\u200b\u200e", MonitorID: 0},
+	}, nil)
+
+	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+
+	assert.NoError(t, err)
+}
+
+func TestCompactLocalWorkspacesOnMonitor_PropagatesRenameWorkspaceErrors(t *testing.T) {
+	hypr := new(mockHyprctl)
+	dispatcher := new(mockDispatcher)
+	defer hypr.AssertExpectations(t)
+	defer dispatcher.AssertExpectations(t)
+
+	monitorID := 0
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 0},
+		{ID: 3, Name: "3\u200b\u200d", MonitorID: 0},
+		{ID: 10, Name: "6\u200b\u2061", MonitorID: 0},
+	}, nil)
+
+	dispatcher.On("RenameWorkspace", 3, "2\u200b\u200c").Return(nil)
+	sentinelErr := errors.New("rename failed")
+	dispatcher.On("RenameWorkspace", 10, "3\u200b\u200d").Return(sentinelErr)
+
+	action := &Action{hyprctl: hypr, dispatcher: dispatcher}
+	err := CompactLocalWorkspacesOnMonitor(action, monitorID)
+
+	assert.ErrorIs(t, err, sentinelErr)
 }

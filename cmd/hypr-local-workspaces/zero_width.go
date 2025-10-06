@@ -49,7 +49,7 @@ func GetZeroWidthNameFromIndex(monitorID, index int) (string, error) {
 	return workspaceName, nil
 }
 
-// GetZeroWidthNameToIndex extracts the workspace index from a zero-width named workspace.
+// GetZeroWidthNameToIndex extracts the workspace index from a zero-width named workspace. Returns -1 if the name is not in the expected format.
 func GetZeroWidthNameToIndex(name string) (int, error) {
 	if name == "" {
 		return -1, fmt.Errorf("empty workspace name")
