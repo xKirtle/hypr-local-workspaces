@@ -6,7 +6,7 @@ type mockDispatcher struct {
 	mock.Mock
 }
 
-func (m *mockDispatcher) Workspace(wsName string) error {
+func (m *mockDispatcher) GoToWorkspace(wsName string) error {
 	args := m.Called(wsName)
 	return args.Error(0)
 }

@@ -43,7 +43,7 @@ type hyprctl interface {
 }
 
 type dispatcher interface {
-	Workspace(wsName string) error
+	GoToWorkspace(wsName string) error
 	RenameWorkspace(id int, wsNewName string) error
 	FocusMonitor(monitorId int) error
 	MoveAllToWorkspace(wsName string) error

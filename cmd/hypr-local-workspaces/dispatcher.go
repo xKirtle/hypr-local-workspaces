@@ -20,7 +20,7 @@ func hyprDispatch(args ...string) error {
 	return nil
 }
 
-func (d *dispatcherClient) Workspace(wsName string) error {
+func (d *dispatcherClient) GoToWorkspace(wsName string) error {
 	return hyprDispatch("workspace", fmt.Sprintf("name:%s", wsName))
 }
 

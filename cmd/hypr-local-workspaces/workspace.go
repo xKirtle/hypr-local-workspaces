@@ -41,6 +41,16 @@ func GetSortedWorkspacesOnMonitor(hyprctl hyprctl, monitorId int) ([]WorkspaceDT
 	return workspaces, nil
 }
 
-func DecideTargetWorkspaceIndex(currentIndex, targetIndex, sortedWorkspaces []WorkspaceDTO) int {
+func DecideTargetWorkspaceIndex(currentIndex, targetIndex int, sortedWorkspaces []WorkspaceDTO) int {
+	return -1
+}
+
+func GetWorkspaceIndexOnList(sortedLocalWs []WorkspaceDTO, workspaceID int) int {
+	for i, ws := range sortedLocalWs {
+		if ws.ID == workspaceID {
+			return i
+		}
+	}
+
 	return -1
 }

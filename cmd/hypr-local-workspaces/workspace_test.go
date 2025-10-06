@@ -183,3 +183,36 @@ func TestGetSortedWorkspacesOnMonitorGuardsAgainstAtoiOverflow(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, expected, workspaces)
 }
+
+func TestGetWorkspaceIndexOnList_FindsIndex(t *testing.T) {
+    list := []WorkspaceDTO{
+        {ID: 10, Name: "10"},
+        {ID: 2, Name: "2"},
+        {ID: 5, Name: "5"},
+    }
+
+    idx := GetWorkspaceIndexOnList(list, 2)
+    assert.Equal(t, 1, idx)
+
+    idx = GetWorkspaceIndexOnList(list, 10)
+    assert.Equal(t, 0, idx)
+
+    idx = GetWorkspaceIndexOnList(list, 5)
+    assert.Equal(t, 2, idx)
+}
+
+func TestGetWorkspaceIndexOnList_NotFound(t *testing.T) {
+    list := []WorkspaceDTO{
+        {ID: 1, Name: "1"},
+        {ID: 3, Name: "3"},
+    }
+
+    idx := GetWorkspaceIndexOnList(list, 2)
+    assert.Equal(t, -1, idx)
+}
+
+func TestGetWorkspaceIndexOnList_EmptyList(t *testing.T) {
+    var list []WorkspaceDTO
+    idx := GetWorkspaceIndexOnList(list, 1)
+    assert.Equal(t, -1, idx)
+}
