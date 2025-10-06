@@ -22,7 +22,7 @@ var zeroWidthDigits = []rune{
 // GetZeroWidthNameFromIndex generates a unique workspace name using zero-width characters based on the monitor ID and workspace index.
 func GetZeroWidthNameFromIndex(monitorID, index int) (string, error) {
 	if monitorID < 0 || monitorID > len(zeroWidthDigits)-1 {
-		return "", fmt.Errorf("monitorID out of range: %d. A maximum of %d monitors is supported: ", monitorID, len(zeroWidthDigits)-1)
+		return "", fmt.Errorf("monitorID out of range: %d. A maximum of %d monitors is supported", monitorID, len(zeroWidthDigits)-1)
 	}
 
 	if index < 0 {
