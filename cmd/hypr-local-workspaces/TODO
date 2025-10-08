@@ -1,0 +1,3 @@
+GoToWorkspace - implement --no-compact flag to not compact workspaces (compact by default). Applicable to all CLI commands (goto/move/cycle)
+MoveToWorkspace - finalize move all logic and factor in compact logic
+CycleWorkspace - mimic GoToWorkspace logic

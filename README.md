@@ -13,9 +13,9 @@ This is achieved through some clever tricks (like using zero-width characters in
 
 - Localized workspaces per monitor (`1–9` available on each).
 - Supports:
-    - Switching to a local workspace.
-    - Moving a window to a local workspace.
-    - Moving all windows to a local workspace.
+  - Switching to a local workspace.
+  - Moving a window to a local workspace.
+  - Moving all windows to a local workspace.
 - Respects the **active monitor** (where the mouse is).
 - Written in **Go** - fast and lightweight.
 
