@@ -2,7 +2,7 @@
 
 Make Hyprland workspaces local per monitor instead of global.
 
-By default, Hyprland treats workspaces as global — meaning workspace `1` is shared across all monitors.
+By default, Hyprland treats workspaces as global - meaning workspace `1` is shared across all monitors.
 `hypr-local-workspaces` scopes workspaces to each monitor, so you get workspaces `1–9` per monitor instead of one global set.
 
 This is achieved by using zero-width characters in workspace names and works seamlessly with your existing Hyprland keybinds.
