@@ -56,3 +56,7 @@ type hyprctlClient struct {
 }
 
 type dispatcherClient struct{}
+
+type GlobalFlags struct {
+	Compact bool
+}

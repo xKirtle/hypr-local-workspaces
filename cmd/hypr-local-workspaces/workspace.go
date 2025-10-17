@@ -112,7 +112,6 @@ func CompactLocalWorkspacesOnMonitor(action *Action, monitorID int, fixNames boo
 
 	for i, ws := range sortedLocalWs {
 		wsIndex, err := GetZeroWidthNameToIndex(ws.Name)
-
 		if err != nil {
 			if !fixNames {
 				return err

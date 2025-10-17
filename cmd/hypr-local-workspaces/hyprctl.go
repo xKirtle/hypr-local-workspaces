@@ -16,7 +16,6 @@ func NewHyprctlClient(timeout time.Duration) hyprctl {
 func hyprJson(cmd string) ([]byte, error) {
 	args := []string{"-j", cmd}
 	out, _, err := RunWith("hyprctl", args, CaptureOutput(), WithTimeout(HyprctlTimeout))
-
 	if err != nil {
 		return nil, err
 	}
@@ -26,7 +25,6 @@ func hyprJson(cmd string) ([]byte, error) {
 
 func hyprJsonDecode[T any](cmd string) (T, error) {
 	out, err := hyprJson(cmd)
-
 	if err != nil {
 		var emptyT T
 		return emptyT, err
@@ -34,7 +32,6 @@ func hyprJsonDecode[T any](cmd string) (T, error) {
 
 	var result T
 	err = json.Unmarshal(out, &result)
-
 	if err != nil {
 		var emptyT T
 		return emptyT, err
@@ -81,7 +78,6 @@ func (c *hyprctlClient) GetActiveWindow() (ClientDTO, error) {
 
 func (c *hyprctlClient) GetActiveMonitorID() (int, error) {
 	activeWs, err := c.GetActiveWorkspace()
-
 	if err != nil {
 		return -1, err
 	}

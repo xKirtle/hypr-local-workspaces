@@ -27,7 +27,7 @@ func TestGoToWorkspaceDispatchesToRequestedWorkspace(t *testing.T) {
 
 	action := NewAction(hypr, dispatcher)
 	targetIndex := 2
-	err := action.GoToWorkspace(targetIndex)
+    err := action.GoToWorkspace(targetIndex, true)
 
 	assert.NoError(t, err)
 }
@@ -42,7 +42,7 @@ func TestGoToWorkspacePropagatesNoActiveWorkspace(t *testing.T) {
 
 	action := NewAction(hypr, dispatcher)
 	targetIndex := 2
-	err := action.GoToWorkspace(targetIndex)
+    err := action.GoToWorkspace(targetIndex, true)
 
 	assert.Error(t, err)
 }
@@ -60,7 +60,7 @@ func TestGoToWorkspacePropagatesGetSortedWorkspacesError(t *testing.T) {
 
 	action := NewAction(hypr, dispatcher)
 	targetIndex := 2
-	err := action.GoToWorkspace(targetIndex)
+    err := action.GoToWorkspace(targetIndex, true)
 
 	assert.Error(t, err)
 }
@@ -84,7 +84,7 @@ func TestGoToWorkspacePropagatesActiveWorkspaceNotOnSortedList(t *testing.T) {
 
 	action := NewAction(hypr, dispatcher)
 	targetIndex := 2
-	err := action.GoToWorkspace(targetIndex)
+    err := action.GoToWorkspace(targetIndex, true)
 
 	assert.Error(t, err)
 }
@@ -108,7 +108,7 @@ func TestGoToWorkspaceReturnsEarlyWhenTargetEqualsCurrent(t *testing.T) {
 
 	action := NewAction(hypr, dispatcher)
 	targetIndex := 1
-	err := action.GoToWorkspace(targetIndex)
+    err := action.GoToWorkspace(targetIndex, true)
 
 	assert.NoError(t, err)
 }
@@ -132,7 +132,7 @@ func TestGoToWorkspacePropagatesGetZeroWidthNameFromIndexError(t *testing.T) {
 
 	action := NewAction(hypr, dispatcher)
 	targetIndex := 0
-	err := action.GoToWorkspace(targetIndex)
+    err := action.GoToWorkspace(targetIndex, true)
 
 	assert.Error(t, err)
 }
@@ -158,7 +158,7 @@ func TestGoToWorkspacePropagatesDispatcherError(t *testing.T) {
 
 	action := NewAction(hypr, dispatcher)
 	targetIndex := 2
-	err := action.GoToWorkspace(targetIndex)
+    err := action.GoToWorkspace(targetIndex, true)
 
 	assert.Error(t, err)
 }
