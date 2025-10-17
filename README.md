@@ -9,8 +9,6 @@
 [![License: MIT](https://img.shields.io/github/license/xKirtle/hypr-local-workspaces)](LICENSE)
 [![AUR Publish](https://github.com/xKirtle/hypr-local-workspaces/actions/workflows/aur-publish.yml/badge.svg)](https://github.com/xKirtle/hypr-local-workspaces/actions/workflows/aur-publish.yml)
 
-[![Code Coverage]](https://codecov.io/github/xKirtle/hypr-local-workspaces/graphs/sunburst.svg?token=A75GB31MAX)
-
 Make Hyprland workspaces local per monitor instead of global.
 
 By default, Hyprland treats workspaces as global - meaning workspace `1` is shared across all monitors.

@@ -1,0 +1,4 @@
+ignore:
+  - "cmd/hypr-local-workspaces/hyprctl.go"
+  - "cmd/hypr-local-workspaces/dispatcher.go"
+  - "cmd/hypr-local-workspaces/main.go"
