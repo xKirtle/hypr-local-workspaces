@@ -55,7 +55,7 @@ Note: the `PKGBUILD` in this repository is updated dynamically during the releas
 
 Just bind your workspace keys to the installed binary:
 
-```conf
+```bash
 # Cycle existing workspaces on focused monitor
 bind = $mainMod, Tab, exec, hypr-local-workspaces cycle next
 bind = $mainMod SHIFT, Tab, exec, hypr-local-workspaces cycle prev
