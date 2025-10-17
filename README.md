@@ -55,7 +55,7 @@ Note: the `PKGBUILD` in this repository is updated dynamically during the releas
 
 Just bind your workspace keys to the installed binary:
 
-```bash
+```conf
 # Cycle existing workspaces on focused monitor
 bind = $mainMod, Tab, exec, hypr-local-workspaces cycle next
 bind = $mainMod SHIFT, Tab, exec, hypr-local-workspaces cycle prev
@@ -77,7 +77,7 @@ bind = $mainMod CTRL, 1, exec, hypr-local-workspaces move --all 1
 
 Commands and flags are structured as:
 
-```bash
+```text
 hypr-local-workspaces goto  <1..9> [global flags]
 hypr-local-workspaces move  <1..9> [--all] [global flags]
 hypr-local-workspaces cycle <next|prev> [global flags]
