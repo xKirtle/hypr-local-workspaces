@@ -1,5 +1,16 @@
 # hypr-local-workspaces
 
+[![AUR](https://img.shields.io/aur/version/hypr-local-workspaces)](https://aur.archlinux.org/packages/hypr-local-workspaces)
+[![AUR votes](https://img.shields.io/aur/votes/hypr-local-workspaces)](https://aur.archlinux.org/packages/hypr-local-workspaces)
+[![Release](https://img.shields.io/github/v/release/xKirtle/hypr-local-workspaces?sort=semver)](https://github.com/xKirtle/hypr-local-workspaces/releases)
+[![codecov](https://codecov.io/github/xKirtle/hypr-local-workspaces/graph/badge.svg?token=A75GB31MAX)](https://codecov.io/github/xKirtle/hypr-local-workspaces)
+[![Go Version](https://img.shields.io/github/go-mod/go-version/xKirtle/hypr-local-workspaces)](go.mod)
+[![Go Report Card](https://goreportcard.com/badge/github.com/xKirtle/hypr-local-workspaces)](https://goreportcard.com/report/github.com/xKirtle/hypr-local-workspaces)
+[![License: MIT](https://img.shields.io/github/license/xKirtle/hypr-local-workspaces)](LICENSE)
+[![AUR Publish](https://github.com/xKirtle/hypr-local-workspaces/actions/workflows/aur-publish.yml/badge.svg)](https://github.com/xKirtle/hypr-local-workspaces/actions/workflows/aur-publish.yml)
+
+[![Code Coverage]](https://codecov.io/github/xKirtle/hypr-local-workspaces/graphs/sunburst.svg?token=A75GB31MAX)
+
 Make Hyprland workspaces local per monitor instead of global.
 
 By default, Hyprland treats workspaces as global - meaning workspace `1` is shared across all monitors.
@@ -151,4 +162,4 @@ Contributions are welcome! If you’d like to help:
 
 ## License
 
-MIT — see `LICENSE` for details.
+MIT - see [LICENSE](LICENSE) for details.
