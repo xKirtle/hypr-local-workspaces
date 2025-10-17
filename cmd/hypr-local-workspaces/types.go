@@ -37,6 +37,7 @@ type hyprctl interface {
 	GetMonitors() ([]MonitorDTO, error)
 	GetWorkspaces() ([]WorkspaceDTO, error)
 	GetClients() ([]ClientDTO, error)
+	GetClientsInWorkspace(workspaceID int) ([]ClientDTO, error)
 	GetActiveWorkspace() (WorkspaceDTO, error)
 	GetActiveWindow() (ClientDTO, error)
 	GetActiveMonitorID() (int, error)
@@ -46,8 +47,8 @@ type dispatcher interface {
 	GoToWorkspace(wsName string) error
 	RenameWorkspace(id int, wsNewName string) error
 	FocusMonitor(monitorId int) error
-	MoveAllToWorkspace(wsName string) error
-	MoveToWorkspace(wsName, windowAddr string) error
+	MoveToWorkspace(wsName string) error
+	MoveAddrToWorkspace(wsName, windowAddr string) error
 }
 
 type hyprctlClient struct {

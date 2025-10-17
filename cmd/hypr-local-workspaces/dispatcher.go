@@ -32,10 +32,10 @@ func (d *dispatcherClient) FocusMonitor(monitorId int) error {
 	return hyprDispatch("focusmonitor", strconv.Itoa(monitorId))
 }
 
-func (d *dispatcherClient) MoveAllToWorkspace(wsName string) error {
-	return hyprDispatch("movetoworkspace", "all", fmt.Sprintf("name:%s", wsName))
+func (d *dispatcherClient) MoveToWorkspace(wsName string) error {
+	return hyprDispatch("movetoworkspace", wsName)
 }
 
-func (d *dispatcherClient) MoveToWorkspace(wsName, windowAddr string) error {
+func (d *dispatcherClient) MoveAddrToWorkspace(wsName, windowAddr string) error {
 	return hyprDispatch("movetoworkspace", fmt.Sprintf("name:%s,address:%s", wsName, windowAddr))
 }

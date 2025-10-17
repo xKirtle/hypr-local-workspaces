@@ -100,7 +100,8 @@ func GetWorkspaceIndexOnList(sortedLocalWs []WorkspaceDTO, workspaceID int) int 
 	return -1
 }
 
-// TODO: Make variant that accepts a list of workspaces instead of fetching them itself
+// TODO: Make variant that accepts a list of workspaces instead of fetching them itself.
+// Most of the time, the caller already has the list of workspaces.
 func CompactLocalWorkspacesOnMonitor(action *Action, monitorID int, fixNames bool) error {
 	hyprctl, dispatcher := action.hyprctl, action.dispatcher
 

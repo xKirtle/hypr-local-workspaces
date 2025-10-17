@@ -11,7 +11,6 @@ func NewAction(hyprctl hyprctl, dispatcher dispatcher) *Action {
 	}
 }
 
-// When {1, 3} and we call GoTo index 2, it's creating a new workspace named 2 in between 1 and 3, instead of going to 3.
 func (a *Action) GoToWorkspace(targetIndex int) error {
 	hyprctl, dispatcher := a.hyprctl, a.dispatcher
 
@@ -33,8 +32,6 @@ func (a *Action) GoToWorkspace(targetIndex int) error {
 	if currentWsIndex == -1 {
 		return fmt.Errorf("current workspace (ID %d) not found in local workspace list", activeWs.ID)
 	}
-
-	// Compact empty workspaces here?
 
 	targetWsIndex, _ := DecideTargetWorkspaceIndex(currentWsIndex, targetIndex, sortedLocalWs)
 
@@ -74,16 +71,6 @@ func (a *Action) MoveToWorkspace(targetIndex int, all bool) error {
 	}
 
 	monitorID := activeWs.MonitorID
-
-	// Compact empty workspaces here?
-	if false {
-		err := CompactLocalWorkspacesOnMonitor(a, monitorID, false)
-
-		if err != nil {
-			return err
-		}
-	}
-
 	sortedLocalWs, err := GetSortedWorkspacesOnMonitor(hyprctl, monitorID)
 
 	if err != nil {
@@ -109,17 +96,39 @@ func (a *Action) MoveToWorkspace(targetIndex int, all bool) error {
 		return err
 	}
 
-	if all {
-		return dispatcher.MoveAllToWorkspace(targetWsName)
-	} else {
-		activeWindow, err := hyprctl.GetActiveWindow()
+	if all && activeWs.WindowsCount > 1 {
+		clients, err := hyprctl.GetClientsInWorkspace(activeWs.ID)
 
 		if err != nil {
 			return err
 		}
 
-		return dispatcher.MoveToWorkspace(targetWsName, activeWindow.Address)
+		for _, client := range clients {
+			err := dispatcher.MoveAddrToWorkspace(targetWsName, client.Address)
+
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		err = dispatcher.MoveToWorkspace(targetWsName)
+
+		if err != nil {
+			return err
+		}
 	}
+
+	// TODO: Make this compact flag configurable and optional (enabled by default).
+	compact := true
+	if compact && (activeWs.WindowsCount == 1 || all) {
+		err := CompactLocalWorkspacesOnMonitor(a, monitorID, false)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (a *Action) CycleWorkspace(direction string) error {
@@ -156,14 +165,25 @@ func (a *Action) CycleWorkspace(direction string) error {
 		return nil
 	}
 
-	targetWsName, err := GetZeroWidthNameFromIndex(monitorID, targetWsIndex)
+	// TODO: Make this compact flag configurable and optional (enabled by default).
+	compact := true
+	if compact {
+		targetWsName, err := GetZeroWidthNameFromIndex(monitorID, targetWsIndex)
 
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
+
+		err = CompactLocalWorkspacesOnMonitor(a, monitorID, false)
+
+		if err != nil {
+			return err
+		}
+
+		return dispatcher.GoToWorkspace(targetWsName)
 	}
 
-	return dispatcher.GoToWorkspace(targetWsName)
-
+	return dispatcher.GoToWorkspace(sortedLocalWs[targetWsIndex].Name)
 }
 
 func (a *Action) InitWorkspaces() error {

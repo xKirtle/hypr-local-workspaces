@@ -21,12 +21,12 @@ func (m *mockDispatcher) FocusMonitor(monitorId int) error {
 	return args.Error(0)
 }
 
-func (m *mockDispatcher) MoveAllToWorkspace(wsName string) error {
+func (m *mockDispatcher) MoveToWorkspace(wsName string) error {
 	args := m.Called(wsName)
 	return args.Error(0)
 }
 
-func (m *mockDispatcher) MoveToWorkspace(wsName, windowAddr string) error {
+func (m *mockDispatcher) MoveAddrToWorkspace(wsName, windowAddr string) error {
 	args := m.Called(wsName, windowAddr)
 	return args.Error(0)
 }

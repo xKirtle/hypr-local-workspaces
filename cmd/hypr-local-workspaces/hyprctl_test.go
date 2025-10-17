@@ -24,6 +24,12 @@ func (m *mockHyprctl) GetClients() ([]ClientDTO, error) {
 	return cs, args.Error(1)
 }
 
+func (m *mockHyprctl) GetClientsInWorkspace(workspaceID int) ([]ClientDTO, error) {
+	args := m.Called(workspaceID)
+	cs, _ := args.Get(0).([]ClientDTO)
+	return cs, args.Error(1)
+}
+
 func (m *mockHyprctl) GetActiveWorkspace() (WorkspaceDTO, error) {
 	args := m.Called()
 	ws, _ := args.Get(0).(WorkspaceDTO)

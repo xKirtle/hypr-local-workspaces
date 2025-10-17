@@ -55,6 +55,22 @@ func (c *hyprctlClient) GetClients() ([]ClientDTO, error) {
 	return hyprJsonDecode[[]ClientDTO]("clients")
 }
 
+func (c *hyprctlClient) GetClientsInWorkspace(workspaceID int) ([]ClientDTO, error) {
+	clients, err := c.GetClients()
+	if err != nil {
+		return nil, err
+	}
+
+	var filtered []ClientDTO
+	for _, client := range clients {
+		if client.Workspace.ID == workspaceID {
+			filtered = append(filtered, client)
+		}
+	}
+
+	return filtered, nil
+}
+
 func (c *hyprctlClient) GetActiveWorkspace() (WorkspaceDTO, error) {
 	return hyprJsonDecode[WorkspaceDTO]("activeworkspace")
 }

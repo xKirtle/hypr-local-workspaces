@@ -113,30 +113,29 @@ func TestGoToWorkspaceReturnsEarlyWhenTargetEqualsCurrent(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-// TODO: Rewrite when compact flag is implemented
-// func TestGoToWorkspacePropagatesGetZeroWidthNameFromIndexError(t *testing.T) {
-// 	hypr := new(mockHyprctl)
-// 	dispatcher := new(mockDispatcher)
-// 	defer hypr.AssertExpectations(t)
-// 	defer dispatcher.AssertExpectations(t)
+func TestGoToWorkspacePropagatesGetZeroWidthNameFromIndexError(t *testing.T) {
+	hypr := new(mockHyprctl)
+	dispatcher := new(mockDispatcher)
+	defer hypr.AssertExpectations(t)
+	defer dispatcher.AssertExpectations(t)
 
-// 	activeWs := WorkspaceDTO{ID: 2, Name: "2\u200b\u200c", MonitorID: 999}
+	activeWs := WorkspaceDTO{ID: 2, Name: "2\u200b\u200c", MonitorID: 999}
 
-// 	hypr.On("GetActiveWorkspace").Return(activeWs, nil)
-// 	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
-// 		{ID: 1, Name: "1\u200b\u200b", MonitorID: 999},
-// 		activeWs,
-// 		{ID: 3, Name: "3\u200b\u200d", MonitorID: 999},
-// 		{ID: 4, Name: "1\u200c\u200b", MonitorID: 1},
-// 		{ID: 5, Name: "1\u200d\u200b", MonitorID: 2},
-// 	}, nil)
+	hypr.On("GetActiveWorkspace").Return(activeWs, nil)
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: 999},
+		activeWs,
+		{ID: 3, Name: "3\u200b\u200d", MonitorID: 999},
+		{ID: 4, Name: "1\u200c\u200b", MonitorID: 1},
+		{ID: 5, Name: "1\u200d\u200b", MonitorID: 2},
+	}, nil)
 
-// 	action := NewAction(hypr, dispatcher)
-// 	targetIndex := 0
-// 	err := action.GoToWorkspace(targetIndex)
+	action := NewAction(hypr, dispatcher)
+	targetIndex := 0
+	err := action.GoToWorkspace(targetIndex)
 
-// 	assert.Error(t, err)
-// }
+	assert.Error(t, err)
+}
 
 func TestGoToWorkspacePropagatesDispatcherError(t *testing.T) {
 	hypr := new(mockHyprctl)
