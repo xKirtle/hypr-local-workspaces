@@ -140,7 +140,7 @@ func parseTrailingGlobalFlags(args []string) (GlobalFlags, error) {
 	if err := fs.Parse(args); err != nil {
 		return GlobalFlags{Compact: true}, err
 	}
-	
+
 	if len(fs.Args()) > 0 {
 		return GlobalFlags{Compact: true}, fmt.Errorf("unexpected arguments: %v", fs.Args())
 	}
