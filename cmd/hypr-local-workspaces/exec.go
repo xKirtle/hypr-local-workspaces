@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"syscall"
@@ -228,22 +227,4 @@ func RunWith(bin string, args []string, opts ...CmdOpt) ([]byte, int, error) {
 	}
 
 	return nil, -1, err
-}
-
-func MustRun(bin string, args ...string) ([]byte, int) {
-	out, code, err := Run(bin, args...)
-	if err != nil {
-		log.Fatalf("running %s %v: %v", bin, args, err)
-	}
-
-	return out, code
-}
-
-func MustRunWith(bin string, args []string, opts ...CmdOpt) ([]byte, int) {
-	out, code, err := RunWith(bin, args, opts...)
-	if err != nil {
-		log.Fatalf("running %s %v: %v", bin, args, err)
-	}
-
-	return out, code
 }
