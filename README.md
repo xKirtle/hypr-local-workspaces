@@ -24,7 +24,7 @@ This is achieved by using zero-width characters in workspace names and works sea
   - Moving a window to a local workspace.
   - Moving all windows to a local workspace.
 - Respects the **active monitor** (where the mouse is).
-- Written in Go — fast and lightweight.
+- Written in Go - fast and lightweight.
 
 ## Installation
 
