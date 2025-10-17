@@ -95,7 +95,7 @@ hypr-local-workspaces cycle <next|prev> [global flags]
 Global flags must appear after the subcommand’s own args/flags.
 
 - Global flags:
-  - `--no-compact` — disable compact mode (enabled by default). When compact mode is enabled, the tool keeps local workspaces contiguous on each monitor by renaming zero-width workspace names as needed.
+  - `--no-compact` - disable compact mode (enabled by default). When compact mode is enabled, the tool keeps local workspaces contiguous on each monitor by renaming zero-width workspace names as needed.
 
 Examples:
 
