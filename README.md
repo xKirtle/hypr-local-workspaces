@@ -12,13 +12,13 @@
 Make Hyprland workspaces local per monitor instead of global.
 
 By default, Hyprland treats workspaces as global - meaning workspace `1` is shared across all monitors.
-`hypr-local-workspaces` scopes workspaces to each monitor, so you get workspaces `1-9` per monitor instead of one global set.
+`hypr-local-workspaces` scopes workspaces to each monitor, so you get workspaces `1..N` per monitor instead of one global set.
 
 This is achieved by using zero-width characters in workspace names and works seamlessly with your existing Hyprland keybinds.
 
 ## Features
 
-- Localized workspaces per monitor (`1-9` available on each).
+- Localized workspaces per monitor (`1..N` available on each).
 - Supports:
   - Switching to a local workspace.
   - Moving a window to a local workspace.
@@ -131,8 +131,8 @@ bind = $mainMod CTRL, 9, exec, hypr-local-workspaces move --all 9
 Commands and flags are structured as:
 
 ```text
-hypr-local-workspaces goto  <1..9> [global flags]
-hypr-local-workspaces move  <1..9> [--all] [global flags]
+hypr-local-workspaces goto  <1..N> [global flags]
+hypr-local-workspaces move  <1..N> [--all] [global flags]
 hypr-local-workspaces cycle <next|prev> [global flags]
 ```
 

@@ -78,8 +78,8 @@ func main() {
 
 func printUsage() {
 	_, _ = fmt.Fprintln(os.Stderr, `Usage:
-  hypr-local-workspaces goto  <1..9>         [global flags]
-  hypr-local-workspaces move  <1..9> [--all] [global flags]
+  hypr-local-workspaces goto  <1..N>         [global flags]
+  hypr-local-workspaces move  <1..N> [--all] [global flags]
   hypr-local-workspaces cycle <next|prev>    [global flags]
 
 Global flags:

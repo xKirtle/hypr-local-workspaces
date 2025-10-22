@@ -11,12 +11,12 @@ import (
 
 func parseGotoArgs(args []string) (int, []string, error) {
 	if len(args) < 1 {
-		return 0, nil, errors.New("usage: hypr-local-workspaces goto <1..9> [global flags]")
+		return 0, nil, errors.New("usage: hypr-local-workspaces goto <1..N> [global flags]")
 	}
 
 	v, err := strconv.Atoi(args[0])
 	if err != nil || v < 1 || v > 9 {
-		return 0, nil, errors.New("goto index must be a digit 1..9")
+		return 0, nil, errors.New("goto index must be a digit 1..N")
 	}
 
 	return v, args[1:], nil
@@ -33,7 +33,7 @@ func parseMoveArgs(args []string) (int, bool, []string, error) {
 
 	pos := fs.Args()
 	if len(pos) < 1 {
-		return 0, false, nil, errors.New("usage: hypr-local-workspaces move <1..9> [--all] [global flags]")
+		return 0, false, nil, errors.New("usage: hypr-local-workspaces move <1..N> [--all] [global flags]")
 	}
 
 	v, err := strconv.Atoi(pos[0])
@@ -42,7 +42,7 @@ func parseMoveArgs(args []string) (int, bool, []string, error) {
 	}
 
 	if v < 1 || v > 9 {
-		return 0, false, nil, errors.New("move index must be a digit 1..9")
+		return 0, false, nil, errors.New("move index must be a digit 1..N")
 	}
 
 	return v, *all, pos[1:], nil
