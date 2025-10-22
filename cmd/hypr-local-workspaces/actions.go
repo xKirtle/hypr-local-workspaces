@@ -54,7 +54,6 @@ func (a *Action) GoToWorkspace(targetIndex int, compact bool) error {
 	return dispatcher.GoToWorkspace(sortedLocalWs[targetWsIndex].Name)
 }
 
-// TODO: Can't move window to workspace that doesn't exist yet
 func (a *Action) MoveToWorkspace(targetIndex int, all bool, compact bool) error {
 	hyprctl, dispatcher := a.hyprctl, a.dispatcher
 
