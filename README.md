@@ -18,7 +18,7 @@ This is achieved by using zero-width characters in workspace names and works sea
 
 ## Features
 
-- Localized workspaces per monitor (`1–9` available on each).
+- Localized workspaces per monitor (`1-9` available on each).
 - Supports:
   - Switching to a local workspace.
   - Moving a window to a local workspace.
