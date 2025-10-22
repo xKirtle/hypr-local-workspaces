@@ -1,9 +1,9 @@
 package main
 
 import (
-    "fmt"
-    "os"
-    "time"
+	"fmt"
+	"os"
+	"time"
 )
 
 func main() {

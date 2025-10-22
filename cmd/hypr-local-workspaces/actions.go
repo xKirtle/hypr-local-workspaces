@@ -54,6 +54,7 @@ func (a *Action) GoToWorkspace(targetIndex int, compact bool) error {
 	return dispatcher.GoToWorkspace(sortedLocalWs[targetWsIndex].Name)
 }
 
+// TODO: Can't move window to workspace that doesn't exist yet
 func (a *Action) MoveToWorkspace(targetIndex int, all bool, compact bool) error {
 	hyprctl, dispatcher := a.hyprctl, a.dispatcher
 
@@ -79,6 +80,11 @@ func (a *Action) MoveToWorkspace(targetIndex int, all bool, compact bool) error 
 		return nil
 	}
 
+	if targetWsIndex > currentWsIndex && targetWsIndex >= len(sortedLocalWs) && activeWs.WindowsCount == 1 {
+		// No-op
+		return nil
+	}
+
 	targetWsName, err := GetZeroWidthNameFromIndex(monitorID, targetWsIndex)
 	if err != nil {
 		return err
@@ -97,7 +103,18 @@ func (a *Action) MoveToWorkspace(targetIndex int, all bool, compact bool) error 
 			}
 		}
 	} else {
-		err = dispatcher.MoveToWorkspace(targetWsName)
+		// This approach would not allow us to move clients to workspaces that don't exist yet. Hyprctl limitation?
+		// err = dispatcher.MoveToWorkspace(targetWsName)
+		// if err != nil {
+		// 	return err
+		// }
+
+		activeWindow, err := hyprctl.GetActiveWindow()
+		if err != nil {
+			return err
+		}
+
+		err = dispatcher.MoveAddrToWorkspace(targetWsName, activeWindow.Address)
 		if err != nil {
 			return err
 		}
