@@ -82,6 +82,50 @@ bind = $mainMod CTRL, 1, exec, hypr-local-workspaces move --all 1
 ...
 ```
 
+<details>
+<summary>Full keybinds for workspaces 1–9 example</summary>
+
+```bash
+# Cycle existing workspaces on focused monitor
+bind = $mainMod, Tab, exec, hypr-local-workspaces cycle next
+bind = $mainMod SHIFT, Tab, exec, hypr-local-workspaces cycle prev
+
+# Switch workspaces relative to active monitor
+bind = $mainMod, 1, exec, hypr-local-workspaces goto 1
+bind = $mainMod, 2, exec, hypr-local-workspaces goto 2
+bind = $mainMod, 3, exec, hypr-local-workspaces goto 3
+bind = $mainMod, 4, exec, hypr-local-workspaces goto 4
+bind = $mainMod, 5, exec, hypr-local-workspaces goto 5
+bind = $mainMod, 6, exec, hypr-local-workspaces goto 6
+bind = $mainMod, 7, exec, hypr-local-workspaces goto 7
+bind = $mainMod, 8, exec, hypr-local-workspaces goto 8
+bind = $mainMod, 9, exec, hypr-local-workspaces goto 9
+
+# Move active window to a workspace relative to active monitor
+bind = $mainMod SHIFT, 1, exec, hypr-local-workspaces move 1
+bind = $mainMod SHIFT, 2, exec, hypr-local-workspaces move 2
+bind = $mainMod SHIFT, 3, exec, hypr-local-workspaces move 3
+bind = $mainMod SHIFT, 4, exec, hypr-local-workspaces move 4
+bind = $mainMod SHIFT, 5, exec, hypr-local-workspaces move 5
+bind = $mainMod SHIFT, 6, exec, hypr-local-workspaces move 6
+bind = $mainMod SHIFT, 7, exec, hypr-local-workspaces move 7
+bind = $mainMod SHIFT, 8, exec, hypr-local-workspaces move 8
+bind = $mainMod SHIFT, 9, exec, hypr-local-workspaces move 9
+
+# Move all windows of active workspace to a workspace relative to active monitor
+bind = $mainMod CTRL, 1, exec, hypr-local-workspaces move --all 1
+bind = $mainMod CTRL, 2, exec, hypr-local-workspaces move --all 2
+bind = $mainMod CTRL, 3, exec, hypr-local-workspaces move --all 3
+bind = $mainMod CTRL, 4, exec, hypr-local-workspaces move --all 4
+bind = $mainMod CTRL, 5, exec, hypr-local-workspaces move --all 5
+bind = $mainMod CTRL, 6, exec, hypr-local-workspaces move --all 6
+bind = $mainMod CTRL, 7, exec, hypr-local-workspaces move --all 7
+bind = $mainMod CTRL, 8, exec, hypr-local-workspaces move --all 8
+bind = $mainMod CTRL, 9, exec, hypr-local-workspaces move --all 9
+```
+
+</details>
+
 ### CLI reference
 
 Commands and flags are structured as:
