@@ -62,6 +62,17 @@ Note: the `PKGBUILD` in this repository is updated dynamically during the releas
 
 ## Usage
 
+Before binding keys, initialize local workspaces when Hyprland starts:
+
+```bash
+# hyprland.conf
+exec-once = hypr-local-workspaces init
+```
+
+Important:
+
+- Do not define static workspaces in your Hyprland config (e.g., lines like `workspace = ...`). The tool creates and manages per‑monitor workspaces dynamically.
+
 Just bind your workspace keys to the installed binary:
 
 ```bash
