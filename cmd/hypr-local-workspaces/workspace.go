@@ -1,6 +1,13 @@
 package main
 
-import "sort"
+import (
+	"sort"
+	"strings"
+)
+
+func isSpecialWorkspaceName(name string) bool {
+	return name == "special" || strings.HasPrefix(name, "special:")
+}
 
 func GetWorkspacesOnMonitor(hyprctl hyprctl, monitorId int) ([]WorkspaceDTO, error) {
 	workspaces, err := hyprctl.GetWorkspaces()
@@ -10,7 +17,7 @@ func GetWorkspacesOnMonitor(hyprctl hyprctl, monitorId int) ([]WorkspaceDTO, err
 
 	var monitorWorkspaces []WorkspaceDTO
 	for _, ws := range workspaces {
-		if ws.MonitorID == monitorId {
+		if ws.MonitorID == monitorId && !isSpecialWorkspaceName(ws.Name) {
 			monitorWorkspaces = append(monitorWorkspaces, ws)
 		}
 	}
