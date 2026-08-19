@@ -79,11 +79,6 @@ func (a *Action) MoveToWorkspace(targetIndex int, all bool, compact bool) error 
 		return nil
 	}
 
-	if targetWsIndex > currentWsIndex && targetWsIndex >= len(sortedLocalWs) && activeWs.WindowsCount == 1 {
-		// No-op
-		return nil
-	}
-
 	targetWsName, err := GetZeroWidthNameFromIndex(monitorID, targetWsIndex)
 	if err != nil {
 		return err
