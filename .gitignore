@@ -34,3 +34,4 @@ go.work.sum
 
 # Binaries
 /hypr-local-workspaces
+/cmd/hypr-local-workspaces/hypr-local-workspaces
