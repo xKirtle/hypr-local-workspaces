@@ -34,7 +34,10 @@ func main() {
 		}
 
 		targetIndex := targetWorkspace - 1
-		_ = action.GoToWorkspace(targetIndex, globals.Compact)
+		
+		if err:= action.GoToWorkspace(targetIndex, globals.Compact); err != nil {
+			fail(err)
+		}
 
 	case "move":
 		targetWorkspace, all, trailing, err := parseMoveArgs(subArgs)
@@ -48,7 +51,9 @@ func main() {
 		}
 
 		targetIndex := targetWorkspace - 1
-		_ = action.MoveToWorkspace(targetIndex, all, globals.Compact)
+		if err:= action.MoveToWorkspace(targetIndex, all, globals.Compact); err != nil {
+			fail(err)
+		}
 
 	case "cycle":
 		dir, trailing, err := parseCycleArgs(subArgs)
@@ -61,10 +66,14 @@ func main() {
 			fail(err)
 		}
 
-		_ = action.CycleWorkspace(dir, globals.Compact)
+		if err:= action.CycleWorkspace(dir, globals.Compact); err != nil {
+			fail(err)
+		}
 
 	case "init":
-		_ = action.InitWorkspaces()
+		if err := action.InitWorkspaces(); err != nil {
+			fail(err)
+		}
 
 	case "help", "-h", "--help", "":
 		printUsage()

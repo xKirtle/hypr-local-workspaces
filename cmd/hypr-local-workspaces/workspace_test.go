@@ -30,6 +30,30 @@ func TestGetWorkspacesOnMonitorFiltersByMonitorID(t *testing.T) {
 	assert.Equal(t, expected, workspaces)
 }
 
+func TestGetWorkspacesOnMonitorFiltersOutSpecialWorkspaces(t *testing.T) {
+	hypr := new(mockHyprctl)
+	defer hypr.AssertExpectations(t)
+
+	monitorID := 1
+	expected := []WorkspaceDTO{
+		{ID: 1, Name: "1\u200b\u200b", MonitorID: monitorID},
+		{ID: 4, Name: "2\u200b\u200c", MonitorID: monitorID},
+	}
+
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		expected[0],
+		{ID: 2, Name: "special", MonitorID: monitorID},
+		{ID: 3, Name: "special:magic", MonitorID: monitorID},
+		expected[1],
+		{ID: 5, Name: "special:other", MonitorID: 7},
+	}, nil)
+
+	workspaces, err := GetWorkspacesOnMonitor(hypr, monitorID)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, workspaces)
+}
+
 func TestGetWorkspacesOnMonitorReturnsEmptyList(t *testing.T) {
 	hypr := new(mockHyprctl)
 	defer hypr.AssertExpectations(t)
@@ -77,6 +101,29 @@ func TestGetSortedWorkspacesOnMonitorSortsByNameIgnoringZeroWidthChars(t *testin
 		{ID: 5, Name: "5\u200f\u2064", MonitorID: monitorID},
 		{ID: 2, Name: "6\u200f\u2060", MonitorID: monitorID},
 		{ID: 4, Name: "10\u200b\u200c\u200c", MonitorID: monitorID},
+	}
+
+	workspaces, err := GetSortedWorkspacesOnMonitor(hypr, monitorID)
+
+	require.NoError(t, err)
+	assert.Equal(t, expected, workspaces)
+}
+
+func TestGetSortedWorkspacesOnMonitorIgnoresSpecialWorkspaces(t *testing.T) {
+	hypr := new(mockHyprctl)
+	defer hypr.AssertExpectations(t)
+
+	monitorID := 1
+	hypr.On("GetWorkspaces").Return([]WorkspaceDTO{
+		{ID: 3, Name: "3\u200b\u200d", MonitorID: monitorID},
+		{ID: 2, Name: "special:magic", MonitorID: monitorID},
+		{ID: 1, Name: "1\u200c\u200b", MonitorID: monitorID},
+		{ID: 4, Name: "special", MonitorID: monitorID},
+	}, nil)
+
+	expected := []WorkspaceDTO{
+		{ID: 1, Name: "1\u200c\u200b", MonitorID: monitorID},
+		{ID: 3, Name: "3\u200b\u200d", MonitorID: monitorID},
 	}
 
 	workspaces, err := GetSortedWorkspacesOnMonitor(hypr, monitorID)
