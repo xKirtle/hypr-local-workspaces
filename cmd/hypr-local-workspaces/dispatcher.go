@@ -85,7 +85,7 @@ func (d *dispatcherClient) MoveAddrToWorkspace(
 		`hl.dsp.window.move({
             workspace = %s,
             window = %s,
-            follow = false
+            follow = true
         })`,
 		luaString("name:"+wsName),
 		luaString("address:"+windowAddr),

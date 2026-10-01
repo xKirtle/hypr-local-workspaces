@@ -26,6 +26,11 @@ This is achieved by using zero-width characters in workspace names and works sea
 - Respects the **active monitor** (where the mouse is).
 - Written in Go - fast and lightweight.
 
+## Requirements
+
+- Hyprland **0.55 or newer**. Dispatches go through Hyprland's Lua dispatcher API (`hl.dsp.*`), which older versions don't have.
+- On Hyprland older than 0.55, use [`v0.3.3`](https://github.com/xKirtle/hypr-local-workspaces/releases/tag/v0.3.3), the last release that uses the legacy dispatchers.
+
 ## Installation
 
 Quick local install (recommended):
