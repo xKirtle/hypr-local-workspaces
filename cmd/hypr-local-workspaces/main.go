@@ -34,8 +34,8 @@ func main() {
 		}
 
 		targetIndex := targetWorkspace - 1
-		
-		if err:= action.GoToWorkspace(targetIndex, globals.Compact); err != nil {
+
+		if err := action.GoToWorkspace(targetIndex, globals.Compact); err != nil {
 			fail(err)
 		}
 
@@ -51,7 +51,7 @@ func main() {
 		}
 
 		targetIndex := targetWorkspace - 1
-		if err:= action.MoveToWorkspace(targetIndex, all, globals.Compact); err != nil {
+		if err := action.MoveToWorkspace(targetIndex, all, globals.Compact); err != nil {
 			fail(err)
 		}
 
@@ -66,7 +66,7 @@ func main() {
 			fail(err)
 		}
 
-		if err:= action.CycleWorkspace(dir, globals.Compact); err != nil {
+		if err := action.CycleWorkspace(dir, globals.Compact); err != nil {
 			fail(err)
 		}
 
