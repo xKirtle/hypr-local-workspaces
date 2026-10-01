@@ -73,7 +73,7 @@ func TestMoveToWorkspace_ReturnsEarlyWhenTargetEqualsCurrent(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestMoveToWorkspace_ReturnsEarlyWhenSingleWindowMovingForward(t *testing.T) {
+func TestMoveToWorkspace_MovesLastWindowToNewWorkspace(t *testing.T) {
 	hypr := new(mockHyprctl)
 	dispatcher := new(mockDispatcher)
 	defer hypr.AssertExpectations(t)
@@ -86,6 +86,10 @@ func TestMoveToWorkspace_ReturnsEarlyWhenSingleWindowMovingForward(t *testing.T)
 		{ID: 2, Name: "2\u200b\u200c", MonitorID: 0},
 		activeWs,
 	}, nil)
+	hypr.On("GetActiveWindow").Return(ClientDTO{Address: "0xabc"}, nil)
+
+	// Target index 3 -> new workspace past the end of the local list
+	dispatcher.On("MoveAddrToWorkspace", "4\u200b\u200e", "0xabc").Return(nil)
 
 	action := NewAction(hypr, dispatcher)
 	// targetIndex points beyond current workspace (index 3)
