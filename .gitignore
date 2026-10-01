@@ -33,4 +33,4 @@ go.work.sum
 .vscode/
 
 # Binaries
-hypr-local-workspaces
+/hypr-local-workspaces
