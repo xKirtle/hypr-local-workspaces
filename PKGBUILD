@@ -6,7 +6,7 @@ pkgdesc="Make Hyprland workspaces local per monitor (Go)"
 arch=('x86_64' 'aarch64')
 url="https://github.com/xKirtle/hypr-local-workspaces"
 license=('MIT')
-depends=('glibc')
+depends=('glibc' 'hyprland>=0.55')
 makedepends=('go')
 options=('!debug' '!strip')
 source=("$url/archive/refs/tags/v$pkgver.tar.gz")
